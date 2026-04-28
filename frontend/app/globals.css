@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #020617;
+    --surface: #0f172a;
+    --surface-2: #1e293b;
+    --border: rgba(99, 102, 241, 0.15);
+    --brand: #6366f1;
+    --brand-light: #818cf8;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+  }
+
+  * { border-color: var(--border); }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'DM Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: rgba(99,102,241,0.3); color: #f8fafc; }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--surface-2); border-radius: 3px; }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(15,23,42,0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(99,102,241,0.12);
+  }
+  .glass-bright {
+    background: rgba(30,41,59,0.8);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(99,102,241,0.2);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #818cf8 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .glow-brand { box-shadow: 0 0 40px rgba(99,102,241,0.25), 0 0 80px rgba(99,102,241,0.1); }
+  .glow-success { box-shadow: 0 0 30px rgba(16,185,129,0.2); }
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+  .waveform-bar { animation: waveform 1.2s ease-in-out infinite; }
+  .waveform-bar:nth-child(1) { animation-delay: 0ms; }
+  .waveform-bar:nth-child(2) { animation-delay: 100ms; }
+  .waveform-bar:nth-child(3) { animation-delay: 200ms; }
+  .waveform-bar:nth-child(4) { animation-delay: 300ms; }
+  .waveform-bar:nth-child(5) { animation-delay: 150ms; }
+  .waveform-bar:nth-child(6) { animation-delay: 250ms; }
+  .waveform-bar:nth-child(7) { animation-delay: 50ms; }
+}
