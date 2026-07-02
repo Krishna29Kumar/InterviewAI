@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 
 // In development, Vite runs on port 3000, and Express runs on port 5000.
 // So we point socket connection to localhost:5000 in dev, otherwise window.location.origin.
-const SOCKET_URL = import.meta.env.DEV ? 'http://localhost:5001' : window.location.origin;
+const SOCKET_URL = import.meta.env.DEV ? 'http://localhost:5000' : window.location.origin;
 
 let socket = null;
 

@@ -87,7 +87,7 @@ export default function InterviewRoomPage() {
       try {
         await interviewAPI.endSession(sessionId as string);
       } catch { /* offline mode ok */ }
-      router.push(`/report/${sessionId}`);
+      router.push("/dashboard");
       return;
     }
     setCurrentIdx((p) => p + 1);

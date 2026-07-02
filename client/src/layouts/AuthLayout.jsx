@@ -20,7 +20,7 @@ const AuthLayout = () => {
       {/* Header logo */}
       <div className="relative z-10 mb-8 text-center">
         <Link to="/" className="inline-flex items-center space-x-2">
-          <div className="w-10 h-10 rounded-xl bg-neon-gradient flex items-center justify-center font-bold text-white shadow-neon-blue">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white shadow-neon-blue logo">
             IA
           </div>
           <span className="text-2xl font-bold tracking-tight text-white">

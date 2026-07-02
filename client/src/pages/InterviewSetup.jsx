@@ -14,6 +14,7 @@ const InterviewSetup = () => {
   const [type, setType] = useState('Technical');
   const [difficulty, setDifficulty] = useState('Medium');
   const [numQuestions, setNumQuestions] = useState(5);
+  const [company, setCompany] = useState('Any Company');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -26,6 +27,15 @@ const InterviewSetup = () => {
     'Product Manager',
     'Data Scientist',
     'Custom Role',
+  ];
+
+  const companiesPool = [
+    'Any Company',
+    'Google',
+    'Microsoft',
+    'Amazon',
+    'Apple',
+    'Meta',
   ];
 
   const handleSubmit = async (e) => {
@@ -42,6 +52,7 @@ const InterviewSetup = () => {
       type,
       difficulty,
       numQuestions,
+      company: company === 'Any Company' ? null : company,
     };
 
     const resultAction = await dispatch(startInterview(configs));
@@ -169,6 +180,29 @@ const InterviewSetup = () => {
               <option value="Hard" className="bg-darkCard text-white">Hard</option>
             </select>
           </div>
+        </div>
+
+        {/* Target Company */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wide">
+            Target Company
+          </label>
+          <select
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+            className="w-full px-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
+          >
+            {companiesPool.map((c) => (
+              <option key={c} value={c} className="bg-darkCard text-white">
+                {c}
+              </option>
+            ))}
+          </select>
+          {company !== 'Any Company' && (
+            <p className="mt-1.5 text-xs text-gray-500">
+              Questions will be tailored to <span className="text-neonBlue font-semibold">{company}</span>'s interview style.
+            </p>
+          )}
         </div>
 
         {/* Number of Questions */}

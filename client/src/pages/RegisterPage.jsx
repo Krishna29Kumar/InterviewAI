@@ -38,7 +38,7 @@ const RegisterPage = () => {
 
     if (register.fulfilled.match(resultAction)) {
       toast.success('Registration successful!');
-      navigate('/dashboard');
+      navigate('/');
     } else {
       toast.error(resultAction.payload || 'Registration failed');
     }

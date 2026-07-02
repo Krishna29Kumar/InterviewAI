@@ -123,9 +123,8 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-3">
             {stats.recent_sessions.map((session) => (
-              <Link
+              <div
                 key={session.id}
-                href={`/report/${session.id}`}
                 className="flex items-center justify-between p-4 glass rounded-xl hover:border-brand-500/20 transition-all group"
               >
                 <div className="flex items-center gap-4">
@@ -143,9 +142,8 @@ export default function DashboardPage() {
                   <div className={cn("px-3 py-1.5 rounded-lg text-sm font-bold border", getScoreBg(session.score))}>
                     <span className={getScoreColor(session.score)}>{session.score}</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors" />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </Card>

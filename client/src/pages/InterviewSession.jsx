@@ -186,8 +186,8 @@ const InterviewSession = () => {
     );
 
     if (submitInterview.fulfilled.match(resultAction)) {
-      toast.success('Interview evaluated! Redirecting to report...');
-      navigate(`/feedback/${resultAction.payload._id}`);
+      toast.success('Interview evaluated!');
+      navigate(`/dashboard`);
     } else {
       toast.error(resultAction.payload || 'Evaluation failed. Please try submitting again.');
     }

@@ -45,7 +45,7 @@ const LoginPage = () => {
         localStorage.removeItem('rememberedEmail');
       }
 
-      navigate('/dashboard');
+      navigate('/');
     } else {
       toast.error(resultAction.payload || 'Invalid email or password');
     }

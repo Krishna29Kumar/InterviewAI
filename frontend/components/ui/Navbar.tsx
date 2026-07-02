@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
 import { BrainCircuit, LayoutDashboard, LogOut, User, ChevronDown } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 import { useState } from "react";
 
 export function Navbar() {
@@ -54,8 +55,11 @@ export function Navbar() {
           </div>
         )}
 
-        {/* Auth */}
-        <div className="flex items-center gap-3">
+        {/* Theme Toggle + Auth */}
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <div className="w-px h-6 bg-slate-700/50"></div>
+
           {isAuthenticated ? (
             <div className="relative">
               <button
@@ -91,14 +95,14 @@ export function Navbar() {
               )}
             </div>
           ) : (
-            <>
+            <div className="flex items-center gap-3">
               <Link href="/auth/login">
                 <Button variant="ghost" size="sm">Sign in</Button>
               </Link>
               <Link href="/auth/register">
                 <Button size="sm">Get started</Button>
               </Link>
-            </>
+            </div>
           )}
         </div>
       </div>

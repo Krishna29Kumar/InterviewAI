@@ -1,7 +1,6 @@
 const fs = require('fs');
 const aiService = require('../services/aiService');
 const Interview = require('../models/Interview');
-const Feedback = require('../models/Feedback');
 
 /**
  * @desc    Start an interview & generate questions
@@ -77,22 +76,7 @@ const submitInterviewSession = async (req, res) => {
     interview.score = evaluation.averageScore || 0;
     await interview.save();
 
-    // Create Feedback document
-    const feedback = await Feedback.create({
-      interview: interviewId,
-      technicalScore: evaluation.technicalScore,
-      communicationScore: evaluation.communicationScore,
-      confidenceScore: evaluation.confidenceScore,
-      grammarScore: evaluation.grammarScore,
-      problemSolvingScore: evaluation.problemSolvingScore,
-      averageScore: evaluation.averageScore,
-      strengths: evaluation.strengths,
-      weaknesses: evaluation.weaknesses,
-      suggestions: evaluation.suggestions,
-      feedbackDetails: evaluation.feedbackDetails,
-    });
-
-    res.status(200).json(feedback);
+    res.status(200).json(evaluation);
   } catch (error) {
     console.error('Error submitting interview:', error);
     res.status(500).json({ message: error.message });

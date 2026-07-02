@@ -6,7 +6,7 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { startInterview } from '../redux/slices/interviewSlice';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Calendar, Play, FileText, TrendingUp, Award, Clock, ArrowRight, UserCheck, Inbox } from 'lucide-react';
+import { Calendar, Play, TrendingUp, Award, Clock, ArrowRight, UserCheck, Inbox } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -265,13 +265,7 @@ const Dashboard = () => {
                     </td>
                     <td className="py-4 pl-4 text-right">
                       {interview.status === 'completed' ? (
-                        <Link
-                          to={`/feedback/${interview._id}`}
-                          className="inline-flex items-center space-x-1 text-xs text-neonBlue hover:underline font-bold"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>View Review</span>
-                        </Link>
+                        <span className="text-emerald-400 text-xs font-bold">Completed</span>
                       ) : (
                         <button
                           onClick={() => handleResumeInterview(interview)}

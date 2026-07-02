@@ -1,15 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Agbalumo&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Logo styling */
+.logo {
+  background-color: #001b4e;
+  font-family: 'Agbalumo', sans-serif;
+  color: #ffffff;
+}
+
+/* ── Theme Variables ─────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --color-bg: #09090e;
+  --color-card: #131326;
+  --color-border: rgba(255, 255, 255, 0.08);
+
+  /* Text */
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+
+  /* Glass */
+  --glass-bg: rgba(19, 19, 38, 0.4);
+  --glass-border: rgba(255, 255, 255, 0.06);
+
+  /* Glow spheres */
+  --sphere-1: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%);
+  --sphere-2: radial-gradient(circle, rgba(171, 34, 255, 0.12) 0%, transparent 70%);
+
+  /* Grid */
+  --grid-color: rgba(255, 255, 255, 0.015);
+
+  /* Scrollbar */
+  --scrollbar-track: #09090e;
+  --scrollbar-thumb: #252538;
+  --scrollbar-thumb-hover: #3b3b5c;
+}
+
+/* Light Theme Overrides */
+html.light-theme {
+  --color-bg: #f0f4f8;
+  --color-card: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.09);
+
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(100, 116, 139, 0.14);
+
+  --sphere-1: radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, transparent 70%);
+  --sphere-2: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%);
+
+  --grid-color: rgba(0, 0, 0, 0.035);
+
+  --scrollbar-track: #e2e8f0;
+  --scrollbar-thumb: #94a3b8;
+  --scrollbar-thumb-hover: #64748b;
+}
+
 @layer base {
   body {
-    background-color: #09090e;
-    color: #e2e8f0;
+    background-color: var(--color-bg);
+    color: var(--text-primary);
     font-family: 'Inter', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Outfit', sans-serif;
   }
 }
@@ -21,24 +88,29 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #09090e;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #252538;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b3b5c;
+  background: var(--scrollbar-thumb-hover);
+}
+
+html.light-theme * {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 /* Premium Glassmorphism */
 .glass-panel {
-  background: rgba(19, 19, 38, 0.4);
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-border);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 .glass-panel-hover:hover {
@@ -47,17 +119,38 @@
   box-shadow: 0 8px 30px rgba(0, 240, 255, 0.05);
 }
 
+html.light-theme .glass-panel-hover:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.08);
+}
+
 .glass-input {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--color-border);
   outline: none;
   transition: all 0.3s ease;
+}
+
+html.light-theme .glass-input {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+}
+
+html.light-theme .glass-input::placeholder {
+  color: var(--text-muted);
 }
 
 .glass-input:focus {
   background: rgba(255, 255, 255, 0.06);
   border-color: #00f0ff;
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+}
+
+html.light-theme .glass-input:focus {
+  background: rgba(255, 255, 255, 1);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 /* Accent Gradients */
@@ -68,27 +161,30 @@
 }
 
 .bg-neon-gradient {
-  background: linear-gradient(135deg, #00f0ff 0%, #ab22ff 100%);
+  background: #2b97fb;
 }
 
 .bg-neon-gradient-hover:hover {
-  background: linear-gradient(135deg, #05e2ef 0%, #991ee5 100%);
+  background: #2b97fb;
 }
 
 /* Animated Grid Background for Landing */
 .grid-bg {
   background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-image:
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
 }
 
 /* Orbit / Pulse animations */
 @keyframes pulseGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.2;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.4;
     transform: scale(1.15);
@@ -96,11 +192,205 @@
 }
 
 .neon-glow-sphere-1 {
-  background: radial-gradient(circle, rgba(0, 240, 255, 0.15) 0%, transparent 70%);
+  background: var(--sphere-1);
   animation: pulseGlow 12s infinite ease-in-out;
 }
 
 .neon-glow-sphere-2 {
-  background: radial-gradient(circle, rgba(171, 34, 255, 0.12) 0%, transparent 70%);
+  background: var(--sphere-2);
   animation: pulseGlow 8s infinite ease-in-out;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT THEME — COMPREHENSIVE COMPONENT OVERRIDES
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Text Colors ─────────────────────────────────────────── */
+html.light-theme .text-white {
+  color: var(--text-primary) !important;
+}
+
+html.light-theme .text-gray-100 {
+  color: #1e293b !important;
+}
+
+html.light-theme .text-gray-200 {
+  color: #334155 !important;
+}
+
+html.light-theme .text-gray-300 {
+  color: #475569 !important;
+}
+
+html.light-theme .text-gray-400 {
+  color: #64748b !important;
+}
+
+html.light-theme .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+/* ── Background Overrides ────────────────────────────────── */
+html.light-theme .bg-darkBg {
+  background-color: var(--color-bg) !important;
+}
+
+html.light-theme .bg-darkCard {
+  background-color: var(--color-card) !important;
+}
+
+html.light-theme .bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light-theme .bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+html.light-theme .bg-darkCard\/20 {
+  background-color: rgba(241, 245, 249, 0.7) !important;
+}
+
+/* ── Border Overrides ────────────────────────────────────── */
+html.light-theme .border-darkBorder {
+  border-color: rgba(0, 0, 0, 0.09) !important;
+}
+
+html.light-theme .border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+html.light-theme .border-white\/10 {
+  border-color: rgba(0, 0, 0, 0.10) !important;
+}
+
+/* ── Dividers ─────────────────────────────────────────────── */
+html.light-theme .divide-white\/5> :not([hidden])~ :not([hidden]) {
+  border-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+/* ── Hover States ─────────────────────────────────────────── */
+html.light-theme .hover\:text-white:hover {
+  color: var(--text-primary) !important;
+}
+
+html.light-theme .hover\:bg-white\/5:hover {
+  background-color: rgba(99, 102, 241, 0.04) !important;
+}
+
+html.light-theme .hover\:bg-white\/10:hover {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Buttons: Neon gradient keep white text ─────────────── */
+html.light-theme .bg-neon-gradient,
+html.light-theme .bg-neon-gradient-hover {
+  color: #ffffff !important;
+}
+
+/* ── Progress Bar Track ──────────────────────────────────── */
+html.light-theme .bg-white\/5.rounded-full {
+  background-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Navbar ──────────────────────────────────────────────── */
+html.light-theme nav.glass-panel {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 16px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Dropdown panel */
+html.light-theme .absolute.right-0.glass-panel {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(0, 0, 0, 0.10) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Vertical divider in navbar */
+html.light-theme .w-px.bg-white\/10 {
+  background-color: rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Mobile menu panel */
+html.light-theme .md\:hidden.glass-panel {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Dashboard Table ─────────────────────────────────────── */
+html.light-theme .border-b.border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Inline level/difficulty chips */
+html.light-theme span.bg-white\/5 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  color: #64748b !important;
+}
+
+/* Border divider inside guide card */
+html.light-theme .border-t.border-white\/5 {
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Score badge colors ───────────────────────────────────── */
+html.light-theme .text-emerald-400 {
+  color: #059669 !important;
+}
+
+html.light-theme .text-amber-400 {
+  color: #d97706 !important;
+}
+
+html.light-theme .text-rose-400 {
+  color: #e11d48 !important;
+}
+
+html.light-theme .text-cyan-400 {
+  color: #0891b2 !important;
+}
+
+/* ── Loading Overlay / Modal ─────────────────────────────── */
+html.light-theme .fixed.inset-0 {
+  background-color: rgba(240, 244, 248, 0.85) !important;
+}
+
+html.light-theme .fixed.inset-0 .glass-panel {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(171, 34, 255, 0.20) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12) !important;
+}
+
+html.light-theme .fixed.inset-0 h3 {
+  color: var(--text-primary) !important;
+}
+
+html.light-theme .fixed.inset-0 p {
+  color: var(--text-secondary) !important;
+}
+
+/* ── Toast styling ───────────────────────────────────────── */
+html.light-theme [data-loading="true"] .glass-panel {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* ── Footer ──────────────────────────────────────────────── */
+html.light-theme footer .glass-panel {
+  background: rgba(255, 255, 255, 0.6) !important;
+  border-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+/* ── Logo always white ────────────────────────────────────── */
+html.light-theme .logo {
+  color: #ffffff !important;
+}
+
+/* ── Hero Badge light mode ────────────────────────────────── */
+html.light-theme .hero-badge {
+  color: #001b4e !important;
+  border-color: rgba(0, 27, 78, 0.3) !important;
+  background-color: rgba(0, 27, 78, 0.08) !important;
 }

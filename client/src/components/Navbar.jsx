@@ -3,7 +3,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
 import { clearActiveInterview } from '../redux/slices/interviewSlice';
-import { Menu, X, User as UserIcon, LogOut, LayoutDashboard, Calendar, BarChart3, Settings } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard, Calendar, BarChart3, Settings, Home } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,7 +29,7 @@ const Navbar = () => {
           {/* Logo */}
           <div className="flex items-center">
             <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-neon-gradient flex items-center justify-center font-bold text-white shadow-neon-blue">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-neon-blue logo">
                 IA
               </div>
               <span className="text-xl font-bold tracking-tight text-white hover:text-neonBlue transition duration-300">
@@ -38,46 +39,62 @@ const Navbar = () => {
           </div>
 
           {/* Navigation Links */}
-          {user && (
-            <div className="hidden md:flex items-center space-x-1">
-              <Link
-                to="/dashboard"
-                className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                  isActive('/dashboard')
-                    ? 'text-neonBlue bg-white/5'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Dashboard</span>
-              </Link>
-              <Link
-                to="/setup"
-                className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                  isActive('/setup')
-                    ? 'text-neonBlue bg-white/5'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Calendar className="w-4 h-4" />
-                <span>Practice</span>
-              </Link>
-              <Link
-                to="/analytics"
-                className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                  isActive('/analytics')
-                    ? 'text-neonBlue bg-white/5'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <BarChart3 className="w-4 h-4" />
-                <span>Analytics</span>
-              </Link>
-            </div>
-          )}
+          <div className="hidden md:flex items-center space-x-1">
+            <Link
+              to="/"
+              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
+                isActive('/')
+                  ? 'text-neonBlue bg-white/5'
+                  : 'text-gray-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>Home</span>
+            </Link>
+            {user && (
+              <>
+                <Link
+                  to="/dashboard"
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
+                    isActive('/dashboard')
+                      ? 'text-neonBlue bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </Link>
+                <Link
+                  to="/setup"
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
+                    isActive('/setup')
+                      ? 'text-neonBlue bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>Practice</span>
+                </Link>
+                <Link
+                  to="/analytics"
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
+                    isActive('/analytics')
+                      ? 'text-neonBlue bg-white/5'
+                      : 'text-gray-300 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Analytics</span>
+                </Link>
+              </>
+            )}
+          </div>
 
-          {/* Action Buttons / User Dropdown */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Desktop: Theme Toggle + Auth */}
+          <div className="hidden md:flex items-center space-x-2">
+            <ThemeToggle />
+            <div className="w-px h-6 bg-white/10"></div>
+
             {user ? (
               <div className="relative">
                 <button
@@ -139,8 +156,10 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="flex items-center md:hidden">
+          {/* Mobile: ThemeToggle + Hamburger */}
+          <div className="flex items-center md:hidden space-x-1">
+            <ThemeToggle />
+            <div className="w-px h-5 bg-white/10"></div>
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition duration-300"

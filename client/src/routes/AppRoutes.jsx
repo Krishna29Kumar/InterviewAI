@@ -14,7 +14,6 @@ import RegisterPage from '../pages/RegisterPage';
 import Dashboard from '../pages/Dashboard';
 import InterviewSetup from '../pages/InterviewSetup';
 import InterviewSession from '../pages/InterviewSession';
-import FeedbackPage from '../pages/FeedbackPage';
 import ProfilePage from '../pages/ProfilePage';
 import AnalyticsPage from '../pages/AnalyticsPage';
 
@@ -56,14 +55,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <InterviewSession />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/feedback/:id"
-          element={
-            <ProtectedRoute>
-              <FeedbackPage />
             </ProtectedRoute>
           }
         />

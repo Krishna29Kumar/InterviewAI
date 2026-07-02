@@ -1,9 +1,93 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts';
-import { BarChart3, TrendingUp, HelpCircle, Activity, Award, CheckCircle } from 'lucide-react';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart3, TrendingUp, HelpCircle, Award, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+/* ── Granular Metric Comparison Panel ─────────────────────── */
+const METRICS = [
+  { key: 'Technical',     label: 'Technical',     color: '#00f0ff', bg: 'bg-neonBlue/10',   border: 'border-neonBlue/20',   text: 'text-neonBlue'   },
+  { key: 'Communication', label: 'Communication', color: '#ab22ff', bg: 'bg-neonPurple/10', border: 'border-neonPurple/20', text: 'text-neonPurple' },
+  { key: 'Grammar',       label: 'Grammar',       color: '#ff2a85', bg: 'bg-accentPink/10', border: 'border-accentPink/20', text: 'text-accentPink' },
+  { key: 'Confidence',    label: 'Confidence',    color: '#fbbf24', bg: 'bg-yellow-400/10', border: 'border-yellow-400/20', text: 'text-yellow-400' },
+];
+
+function MetricBar({ label, value, color, bg, border, text, isBest }) {
+  return (
+    <div className={'rounded-xl p-4 border ' + bg + ' ' + border}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className={'w-2 h-2 rounded-full'} style={{ backgroundColor: color }} />
+          <span className="text-xs font-semibold text-gray-300">{label}</span>
+          {isBest && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-400/15 text-yellow-400 border border-yellow-400/25">BEST</span>
+          )}
+        </div>
+        <span className={'text-sm font-extrabold ' + text}>{value ?? '—'}{value != null ? '%' : ''}</span>
+      </div>
+      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: value != null ? value + '%' : '0%', backgroundColor: color, opacity: 0.85 }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function GranularMetricPanel({ barData }) {
+  const [activeIdx, setActiveIdx] = React.useState(barData.length - 1);
+  const session = barData[activeIdx] || {};
+  const scores = METRICS.map((m) => session[m.key] ?? null);
+  const maxScore = scores.reduce((best, s, i) => (s != null && (best === -1 || s > scores[best]) ? i : best), -1);
+
+  return (
+    <div className="glass-panel p-6 rounded-2xl border border-darkBorder flex flex-col gap-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
+          <BarChart3 className="w-4 h-4 text-neonPurple" />
+          <span>Granular Metric Comparison</span>
+        </h3>
+        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Last {barData.length} sessions</span>
+      </div>
+
+      {/* Session Tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {barData.map((s, i) => (
+          <button
+            key={i}
+            onClick={() => setActiveIdx(i)}
+            className={'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ' +
+              (activeIdx === i
+                ? 'bg-neonPurple/20 border border-neonPurple/40 text-neonPurple'
+                : 'bg-white/5 border border-white/8 text-gray-400 hover:text-white hover:bg-white/10')}
+          >
+            {s.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Score summary row */}
+      <div className="grid grid-cols-4 gap-2">
+        {METRICS.map((m, i) => (
+          <div key={m.key} className={'rounded-xl p-3 text-center border ' + m.bg + ' ' + m.border}>
+            <p className={'text-xl font-extrabold ' + m.text}>{scores[i] ?? '—'}{scores[i] != null ? '' : ''}</p>
+            <p className="text-[9px] text-gray-500 mt-0.5 uppercase tracking-wide">{m.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Progress bars */}
+      <div className="flex flex-col gap-3">
+        {METRICS.map((m, i) => (
+          <MetricBar key={m.key} {...m} value={scores[i]} isBest={i === maxScore && scores[i] != null} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const AnalyticsPage = () => {
   const [interviews, setInterviews] = useState([]);
@@ -153,38 +237,8 @@ const AnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Bar Chart */}
-        <div className="glass-panel p-6 rounded-2xl border border-darkBorder">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
-              <Activity className="w-4 h-4 text-neonPurple" />
-              <span>Granular Metric Comparison</span>
-            </h3>
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Last 4 sessions</span>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={10} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{
-                    background: '#131326',
-                    borderColor: 'rgba(255, 255, 255, 0.08)',
-                    borderRadius: '12px',
-                    color: '#fff',
-                  }}
-                />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                <Bar dataKey="Technical" fill="#00f0ff" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Communication" fill="#ab22ff" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Grammar" fill="#ff2a85" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Confidence" fill="#fbbf24" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        {/* Granular Metric Comparison — enhanced UI */}
+        <GranularMetricPanel barData={barData} />
       </div>
 
       {/* Grid: Pie Distribution & Insights panel */}
