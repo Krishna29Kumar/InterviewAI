@@ -137,18 +137,6 @@ const LandingPage = () => {
         </motion.div>
       </section>
 
-      {/* STATS */}
-      <section className="w-full py-12 border-t border-white/5">
-        <div className="max-w-5xl mx-auto px-4">
-          <motion.div variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-80px" }} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard value="50K+" label="Mock Interviews Run" icon={Target} colorClass="bg-neonBlue/10 border border-neonBlue/20 text-neonBlue" />
-            <StatCard value="94%" label="User Satisfaction" icon={Trophy} colorClass="bg-yellow-400/10 border border-yellow-400/20 text-yellow-400" />
-            <StatCard value="200+" label="Question Templates" icon={BrainCircuit} colorClass="bg-neonPurple/10 border border-neonPurple/20 text-neonPurple" />
-            <StatCard value="6" label="Top Companies" icon={Users} colorClass="bg-accentPink/10 border border-accentPink/20 text-accentPink" />
-          </motion.div>
-        </div>
-      </section>
-
       {/* FEATURES */}
       <section id="features" className="w-full py-20 border-t border-white/5">
         <div className="max-w-6xl mx-auto px-4">
