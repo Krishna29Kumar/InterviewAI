@@ -1,5 +1,5 @@
-﻿import React from "react";
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import {
@@ -38,12 +38,14 @@ function StatCard({ value, label, icon: Icon, colorClass }) {
   );
 }
 
-function FeatureCard({ icon: Icon, title, desc, iconClass, borderClass }) {
+function FeatureCard({ icon: Icon, title, desc, iconClass, borderClass, to }) {
+  const navigate = useNavigate();
   return (
     <motion.div
       variants={cardVariant}
-      whileHover={{ y: -6, transition: { duration: 0.2 } }}
-      className={"glass-panel rounded-2xl p-7 border border-white/5 " + borderClass + " transition-all duration-300 flex flex-col gap-4 group cursor-default"}
+      whileHover={to ? { y: -6, scale: 1.02, transition: { duration: 0.2 } } : { y: -6, transition: { duration: 0.2 } }}
+      onClick={() => to && navigate(to)}
+      className={"glass-panel rounded-2xl p-7 border border-white/5 " + borderClass + " transition-all duration-300 flex flex-col gap-4 group " + (to ? "cursor-pointer hover:shadow-neon-blue/20" : "cursor-default")}
     >
       <div className={"w-12 h-12 rounded-xl flex items-center justify-center " + iconClass + " group-hover:scale-110 transition-transform duration-300"}>
         <Icon className="w-6 h-6" />
@@ -77,6 +79,7 @@ const LandingPage = () => {
       iconClass: "bg-accentPink/10 border border-accentPink/20 text-accentPink",
       borderClass: "hover:border-accentPink/30",
       desc: "Scored across technical correctness, communication, grammar, and confidence with actionable improvement tips.",
+      to: "/analytics",
     },
     {
       icon: BrainCircuit, title: "Company-Specific Prep",
@@ -89,6 +92,7 @@ const LandingPage = () => {
       iconClass: "bg-neonPurple/10 border border-neonPurple/20 text-neonPurple",
       borderClass: "hover:border-neonPurple/30",
       desc: "Track every session across time with a rich analytics dashboard. See where you improve and where to focus next.",
+      to: "/dashboard",
     },
     {
       icon: Shield, title: "Private & Secure",
