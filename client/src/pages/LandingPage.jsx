@@ -45,7 +45,7 @@ function FeatureCard({ icon: Icon, title, desc, iconClass, borderClass, to }) {
       variants={cardVariant}
       whileHover={to ? { y: -6, scale: 1.02, transition: { duration: 0.2 } } : { y: -6, transition: { duration: 0.2 } }}
       onClick={() => to && navigate(to)}
-      className={"glass-panel rounded-2xl p-7 border border-white/5 " + borderClass + " transition-all duration-300 flex flex-col gap-4 group " + (to ? "cursor-pointer hover:shadow-neon-blue/20" : "cursor-default")}
+      className={"feature-card glass-panel rounded-2xl p-7 border border-white/5 " + borderClass + " transition-all duration-300 flex flex-col gap-4 group " + (to ? "cursor-pointer hover:shadow-neon-blue/20" : "cursor-default")}
     >
       <div className={"w-12 h-12 rounded-xl flex items-center justify-center " + iconClass + " group-hover:scale-110 transition-transform duration-300"}>
         <Icon className="w-6 h-6" />
@@ -86,6 +86,7 @@ const LandingPage = () => {
       iconClass: "bg-neonBlue/10 border border-neonBlue/20 text-neonBlue",
       borderClass: "hover:border-neonBlue/30",
       desc: "Choose from top companies like Google, Amazon, and Meta to get questions modeled on their real interview culture.",
+      to: "/setup",
     },
     {
       icon: TrendingUp, title: "Performance Analytics",

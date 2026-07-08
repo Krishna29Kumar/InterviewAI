@@ -16,6 +16,7 @@ connectDB();
 
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 const authRoutes = require('./routes/authRoutes');
+const poseRoutes = require("./routes/poseRoutes");
 const profileRoutes = require('./routes/profileRoutes');
 const interviewRoutes = require('./routes/interviewRoutes');
 const socketHandler = require('./socket/socketHandler');
@@ -53,6 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/interview', interviewRoutes);
+app.use('/api/pose', poseRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Interview AI API is running...' });

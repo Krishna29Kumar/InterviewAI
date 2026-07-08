@@ -1,7 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+# pyrefly: ignore [missing-import]
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from datetime import datetime
+# pyrefly: ignore [missing-import]
 from bson import ObjectId
 import random
+import os
+import shutil
+import tempfile
 from app.core.database import get_db
 from app.routers.auth import get_current_user
 from app.schemas.interview import StartInterviewRequest, SubmitAnswerRequest
@@ -281,3 +286,37 @@ async def list_sessions(current_user: dict = Depends(get_current_user)):
         }
         for s in sessions
     ]
+
+
+@router.post("/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    # Save the uploaded file temporarily
+    temp_dir = tempfile.gettempdir()
+    temp_path = os.path.join(temp_dir, f"temp_{random.randint(1000, 9999)}.wav")
+    
+    try:
+        with open(temp_path, "wb") as buffer:
+            shutil.copyfileobj(audio.file, buffer)
+        
+        # Import speech recognition package
+        import speech_recognition as sr
+        r = sr.Recognizer()
+        
+        with sr.AudioFile(temp_path) as source:
+            audio_data = r.record(source)
+            # Use Google Speech Recognition API (completely free & built-in)
+            text = r.recognize_google(audio_data)
+            return {"transcript": text}
+            
+    except sr.UnknownValueError:
+        return {"transcript": "", "error": "Speech not understood"}
+    except sr.RequestError as e:
+        return {"transcript": "", "error": f"Speech API request error: {e}"}
+    except Exception as e:
+        return {"transcript": "", "error": str(e)}
+    finally:
+        if os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except Exception:
+                pass

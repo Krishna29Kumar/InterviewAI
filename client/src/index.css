@@ -378,9 +378,9 @@ html.light-theme [data-loading="true"] .glass-panel {
 }
 
 /* ── Footer ──────────────────────────────────────────────── */
-html.light-theme footer .glass-panel {
-  background: rgba(255, 255, 255, 0.6) !important;
-  border-color: rgba(0, 0, 0, 0.07) !important;
+html.light-theme footer.glass-panel {
+  background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%) !important;
+  border-color: rgba(168, 85, 247, 0.2) !important;
 }
 
 /* ── Logo always white ────────────────────────────────────── */
@@ -393,4 +393,74 @@ html.light-theme .hero-badge {
   color: #001b4e !important;
   border-color: rgba(0, 27, 78, 0.3) !important;
   background-color: rgba(0, 27, 78, 0.08) !important;
+}
+
+/* ── Light Mode: Feature Cards (Home Page) ────────────────── */
+html.light-theme .feature-card {
+  background: linear-gradient(145deg, #e0e7ff 0%, #ede9fe 40%, #dbeafe 100%) !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.10), 0 1px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light-theme .feature-card:hover {
+  background: linear-gradient(145deg, #c7d2fe 0%, #ddd6fe 40%, #bfdbfe 100%) !important;
+  border-color: rgba(99, 102, 241, 0.45) !important;
+  box-shadow: 0 10px 36px rgba(99, 102, 241, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Light Mode: Role Cards (Practice/Setup Page) ─────────── */
+html.light-theme .role-card {
+  background: linear-gradient(145deg, #e0e7ff 0%, #dbeafe 100%) !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.22) !important;
+  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+html.light-theme .role-card:hover {
+  background: linear-gradient(145deg, #c7d2fe 0%, #bfdbfe 100%) !important;
+  border-color: rgba(59, 130, 246, 0.45) !important;
+  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.15), 0 3px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* ── Light Mode: Neon Blue (Cyan) Visibility Overrides ────── */
+html.light-theme .text-neonBlue {
+  color: #2563eb !important;
+}
+
+html.light-theme .fill-neonBlue {
+  fill: #2563eb !important;
+}
+
+html.light-theme .border-neonBlue\/20 {
+  border-color: rgba(37, 99, 235, 0.25) !important;
+}
+
+html.light-theme .border-neonBlue\/30 {
+  border-color: rgba(37, 99, 235, 0.35) !important;
+}
+
+html.light-theme .bg-neonBlue\/10 {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+}
+
+html.light-theme .bg-neonBlue\/15 {
+  background-color: rgba(37, 99, 235, 0.12) !important;
+}
+
+html.light-theme .hover\:bg-neonBlue\/20:hover {
+  background-color: rgba(37, 99, 235, 0.18) !important;
+}
+
+html.light-theme nav .text-xl.font-bold {
+  color: #1e293b !important;
+}
+
+html.light-theme nav .text-xl.font-bold:hover {
+  color: #4338ca !important;
+}
+
+/* ── Light Mode: Recent Sessions Panel (Dashboard) ────────── */
+html.light-theme .sessions-log-panel {
+  background: linear-gradient(145deg, #e0e7ff 0%, #ede9fe 40%, #dbeafe 100%) !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
 }

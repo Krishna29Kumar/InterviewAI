@@ -14,7 +14,7 @@ const Footer = () => {
                 IA
               </div>
               <span className="text-xl font-bold text-white">
-                Interview <span className="text-neonBlue">AI</span>
+                Interview <span className="text-neonPurple">AI</span>
               </span>
             </Link>
             <p className="mt-4 text-sm text-gray-400 max-w-sm">
@@ -48,8 +48,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between">
           <p className="text-xs text-gray-500 flex items-center mt-2 sm:mt-0">
-            <span>Powered by GPT-4o & Whisper</span>
-            <Cpu className="w-3 h-3 ml-1 text-neonPurple" />
+            <span>© {new Date().getFullYear()} InterviewAI. All rights reserved.</span>
           </p>
         </div>
       </div>

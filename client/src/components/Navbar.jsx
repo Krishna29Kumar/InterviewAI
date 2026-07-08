@@ -33,7 +33,7 @@ const Navbar = () => {
                 IA
               </div>
               <span className="text-xl font-bold tracking-tight text-white hover:text-neonBlue transition duration-300">
-                Interview <span className="text-neonBlue">AI</span>
+                Interview <span className="text-neonPurple">AI</span>
               </span>
             </Link>
           </div>

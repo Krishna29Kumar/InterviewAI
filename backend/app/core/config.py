@@ -11,8 +11,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     FRONTEND_URL: str = "http://localhost:3000"
     ENVIRONMENT: str = "development"
+    OLLAMA_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3.1:8b"
+    GITHUB_TOKEN: Optional[str] = None
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 settings = Settings()

@@ -193,7 +193,7 @@ const Dashboard = () => {
       )}
 
       {/* History Log Table */}
-      <div className="glass-panel p-6 rounded-2xl border border-darkBorder">
+      <div className="sessions-log-panel glass-panel p-6 rounded-2xl border border-darkBorder">
         <h3 className="text-lg font-bold text-white mb-6">Recent Sessions</h3>
 
         {loading ? (

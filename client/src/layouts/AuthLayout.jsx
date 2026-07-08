@@ -24,7 +24,7 @@ const AuthLayout = () => {
             IA
           </div>
           <span className="text-2xl font-bold tracking-tight text-white">
-            Interview <span className="text-neonBlue">AI</span>
+            Interview <span className="text-neonPurple">AI</span>
           </span>
         </Link>
         <p className="mt-2 text-sm text-gray-400">Perfect your interviewing skills with Generative AI</p>

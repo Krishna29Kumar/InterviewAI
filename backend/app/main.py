@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.database import connect_db, close_db
 from app.routers import auth, interview, dashboard
+from app.routers.anomaly import router as anomaly_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +30,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(interview.router)
 app.include_router(dashboard.router)
+app.include_router(anomaly_router)
 
 @app.get("/health")
 async def health():
