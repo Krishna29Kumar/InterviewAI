@@ -8,7 +8,7 @@ import { initiateSocketConnection, disconnectSocket, emitSocketEvent } from '../
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Volume2, VolumeX, Mic, Square, ChevronLeft, ChevronRight, Send, Timer, Loader2, AlertTriangle, CameraOff, Shield } from 'lucide-react';
-import { useAnomalyDetector } from '../hooks/useAnomalyDetector';
+import { useAnomalyDetector, MAX_WARNINGS } from '../hooks/useAnomalyDetector';
 import { useCopyPasteDetector } from '../hooks/useCopyPasteDetector';
 import TerminationModal from '../components/TerminationModal';
 import AnomalyOverlay from '../components/AnomalyOverlay';
@@ -25,7 +25,7 @@ const InterviewSession = () => {
   const [camError, setCamError] = useState('');
   const [anomalySummary, setAnomalySummary] = useState(null);
   const [showReport, setShowReport] = useState(false);
-  const { currentAnomalies, currentScore, isCameraOn, tabSwitchCount, isServiceOnline, getSessionSummary, reset: resetAnomalies } = useAnomalyDetector({ videoRef, isActive: camEnabled, intervalMs: 3000 });
+  const { currentAnomalies, currentScore, isCameraOn, tabSwitchCount, isServiceOnline, getSessionSummary, reset: resetAnomalies, warningCount } = useAnomalyDetector({ videoRef, isActive: camEnabled, intervalMs: 3000 });
 
   const { isRecording, transcript, audioUrl, isTranscribing, error: micError, startRecording, stopRecording, resetTranscript } = useSpeechToText();
   const { speak, stop: stopSpeech, isPlaying: isSpeaking } = useTextToSpeech();
@@ -55,6 +55,15 @@ const InterviewSession = () => {
     if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
     setCamEnabled(false);
   };
+  // User ne khud camera-off button dabaya (session ke dauran) — yeh bhi
+  // ek violation hai, warna candidate jaan-boojh kar khud camera band
+  // karke proctoring se bach sakta tha.
+  const handleManualCameraOff = () => {
+    if (currentInterview && !violation) {
+      setViolation({ type: 'camera_off', timestamp: new Date().toISOString() });
+    }
+    stopWebcam();
+  };
   useEffect(() => { if (currentInterview) startWebcam(); return () => stopWebcam(); }, [currentInterview?._id]);
 
   // Camera off DURING active session — strict: instant terminate + 0 score
@@ -65,6 +74,17 @@ const InterviewSession = () => {
     }
   }, [isCameraOn, currentInterview, violation, camEnabled]);
   useEffect(() => { if (tabSwitchCount > 0) toast.error('Tab switch detected! (' + tabSwitchCount + 'x)'); }, [tabSwitchCount]);
+  useEffect(() => {
+    if (warningCount > 0 && warningCount < MAX_WARNINGS) {
+      toast.error(`Proctoring Warning ${warningCount}/${MAX_WARNINGS}! Sustained anomaly detected.`);
+    }
+  }, [warningCount]);
+  useEffect(() => {
+    if (warningCount >= MAX_WARNINGS && !violation) {
+      setViolation({ type: 'proctoring_warnings', timestamp: new Date().toISOString() });
+      stopWebcam();
+    }
+  }, [warningCount, violation]);
   useEffect(() => { if (!currentInterview) navigate('/setup'); }, [currentInterview, navigate]);
   useEffect(() => {
     if (currentInterview?._id) { initiateSocketConnection(currentInterview._id); emitSocketEvent('start_interview', { interviewId: currentInterview._id, role: currentInterview.role }); }
@@ -188,7 +208,7 @@ const InterviewSession = () => {
                   <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">Live Feed</span>
                 </div>
                 {/* Toggle Cam */}
-                <button onClick={stopWebcam} className="absolute top-3 right-3 p-2 rounded-full bg-black/75 text-gray-400 hover:text-rose-400 border border-white/10 hover:border-rose-500/20 transition duration-200">
+                <button onClick={handleManualCameraOff} className="absolute top-3 right-3 p-2 rounded-full bg-black/75 text-gray-400 hover:text-rose-400 border border-white/10 hover:border-rose-500/20 transition duration-200">
                   <CameraOff className="w-3.5 h-3.5" />
                 </button>
               </>
@@ -236,6 +256,12 @@ const InterviewSession = () => {
                   <span>AI Proctoring Service</span>
                   <span className={isServiceOnline ? "text-emerald-400 font-semibold" : "text-amber-400 font-semibold"}>
                     {isServiceOnline ? "Active" : "Connecting..."}
+                  </span>
+                </div>
+                <div className="flex justify-between py-2.5">
+                  <span>Proctoring Warnings</span>
+                  <span className={warningCount > 0 ? "text-amber-400 font-semibold" : "text-emerald-400 font-semibold"}>
+                    {warningCount}/{MAX_WARNINGS}
                   </span>
                 </div>
               </div>

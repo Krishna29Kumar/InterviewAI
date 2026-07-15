@@ -78,6 +78,14 @@ export const ANOMALY_TIPS = {
   camera_off:              'Camera on karo',
 };
 
+// ─────────────────────────────────────────────────
+// SUSTAINED WARNING SYSTEM — agar koi anomaly 3 sec se
+// zyada continuously bani rahe toh ek "warning" count hoti
+// hai. MAX_WARNINGS pe interview terminate ho jaata hai.
+// ─────────────────────────────────────────────────
+export const SUSTAINED_MS  = 3000;
+export const MAX_WARNINGS  = 5;
+
 function getRating(score) {
   if (score >= 90) return 'Excellent';
   if (score >= 75) return 'Good';
@@ -111,6 +119,12 @@ export const useAnomalyDetector = ({
   const [tabSwitchCount,   setTabSwitchCount]   = useState(0);
   const [isCameraOn,       setIsCameraOn]       = useState(true);
   const [isServiceOnline,  setIsServiceOnline]  = useState(true);
+
+  // Sustained-warning tracking (3-sec continuous anomaly = 1 warning)
+  const anomalyStartRef   = useRef({});   // { [type]: firstSeenAtMs }
+  const anomalyCountedRef = useRef({});   // { [type]: true } once counted for this streak
+  const [warningCount, setWarningCount] = useState(0);
+  const [warningLog,   setWarningLog]   = useState([]); // [{ type, timestamp }]
 
   // Create hidden canvas once on mount
   useEffect(() => {
@@ -303,6 +317,46 @@ export const useAnomalyDetector = ({
   }, [isActive, intervalMs, captureAndSend, startVoiceMonitor, stopVoiceMonitor]);
 
   // ──────────────────────────────────────────────
+  // SUSTAINED WARNING CHECK (eye/posture/voice/tab/camera)
+  // Har anomaly type ka streak track hota hai. 3 sec se
+  // zyada continuously present rahe toh 1 warning count hoti hai.
+  // ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!isActive) return;
+    const now = Date.now();
+    const active = currentAnomalies;
+    const newlyCounted = [];
+
+    active.forEach((type) => {
+      if (!anomalyStartRef.current[type]) {
+        anomalyStartRef.current[type] = now;
+      } else if (
+        now - anomalyStartRef.current[type] >= SUSTAINED_MS &&
+        !anomalyCountedRef.current[type]
+      ) {
+        anomalyCountedRef.current[type] = true;
+        newlyCounted.push(type);
+      }
+    });
+
+    // Streak reset for anomalies that are no longer active
+    Object.keys(anomalyStartRef.current).forEach((type) => {
+      if (!active.includes(type)) {
+        delete anomalyStartRef.current[type];
+        delete anomalyCountedRef.current[type];
+      }
+    });
+
+    if (newlyCounted.length > 0) {
+      setWarningCount((prev) => prev + newlyCounted.length);
+      setWarningLog((prev) => [
+        ...prev,
+        ...newlyCounted.map((type) => ({ type, timestamp: now })),
+      ]);
+    }
+  }, [currentAnomalies, isActive]);
+
+  // ──────────────────────────────────────────────
   // SESSION SUMMARY
   // ──────────────────────────────────────────────
   const getSessionSummary = useCallback(() => {
@@ -346,9 +400,13 @@ export const useAnomalyDetector = ({
     setCurrentAnomalies([]);
     setCurrentScore(100);
     setTabSwitchCount(0);
-    tabCountRef.current   = 0;
-    frameCountRef.current = 0;
-    voiceAnomsRef.current = [];
+    setWarningCount(0);
+    setWarningLog([]);
+    tabCountRef.current       = 0;
+    frameCountRef.current     = 0;
+    voiceAnomsRef.current     = [];
+    anomalyStartRef.current   = {};
+    anomalyCountedRef.current = {};
   }, []);
 
   return {
@@ -360,5 +418,7 @@ export const useAnomalyDetector = ({
     isServiceOnline,
     getSessionSummary,
     reset,
+    warningCount,
+    warningLog,
   };
 };

@@ -84,7 +84,9 @@ export default function TerminationModal({ violation, onConfirm }) {
                     marginBottom: '8px',
                     lineHeight: 1.6,
                 }}>
-                    Copy-paste detected on a DSA/Coding question.
+                    {violation.type === 'proctoring_warnings'
+                        ? 'Interview terminated: 5 sustained proctoring warnings (eye tracking / posture / tab / camera) were recorded.'
+                        : 'Copy-paste detected on a DSA/Coding question.'}
                 </p>
                 <p style={{
                     fontSize: '13px',
@@ -114,6 +116,7 @@ export default function TerminationModal({ violation, onConfirm }) {
                                 violation.type === 'tab_switch' ? '🚨 Tab Switch Detected' :
                                     violation.type === 'fullscreen_exit' ? '🖥️ Fullscreen Mode Exited' :
                                     violation.type === 'camera_off' ? '📷 Camera Turned Off' :
+                                        violation.type === 'proctoring_warnings' ? '⚠️ 5 Sustained Proctoring Warnings' :
                                         '📋 Copy-Paste Attempt'}
                     </div>
                     <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>

@@ -223,30 +223,8 @@ const AnalyticsPage = () => {
       </div>
 
       {/* Metric Comparison */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20, marginBottom: 20 }}>
 
-        {/* Granular Bars */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp(0.3)} style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: isLight ? '#1e293b' : 'white' }}>Skill Breakdown</div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {barData.map((_, i) => (
-                <button key={i} onClick={() => setActiveIdx(i)} style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', background: activeIdx === i ? 'rgba(171,34,255,0.2)' : 'rgba(255,255,255,0.05)', border: activeIdx === i ? '1px solid rgba(171,34,255,0.4)' : '1px solid rgba(255,255,255,0.08)', color: activeIdx === i ? '#ab22ff' : '#6b7280' }}>
-                  S{i + 1}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 20 }}>
-            {METRICS.map((m, i) => (
-              <div key={m.key} style={{ textAlign: 'center', padding: '10px 8px', borderRadius: 10, background: `${m.color}10`, border: `1px solid ${m.color}20` }}>
-                <div style={{ fontSize: 20, fontWeight: 900, color: m.color }}>{scores[i] ?? '—'}</div>
-                <div style={{ fontSize: 9, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.3px', marginTop: 3 }}>{m.label}</div>
-              </div>
-            ))}
-          </div>
-          {METRICS.map((m, i) => <MetricBar key={m.key} {...m} value={scores[i]} isBest={i === maxIdx && scores[i] != null} />)}
-        </motion.div>
 
         {/* Insights */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp(0.35)} style={cardStyle}>
