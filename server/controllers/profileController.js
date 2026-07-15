@@ -1,3 +1,27 @@
+/**
+ * FILE: server/controllers/profileController.js
+ * ================================================================
+ * YE FILE KYA HAI: User ke profile settings (naam/email/password/avatar)
+ * update karne wale API handlers.
+ *
+ * FUNCTIONS:
+ *   1. updateProfile()  → Naam, email, ya password change karta hai.
+ *                         Password change karne ke liye current password
+ *                         verify karta hai pehle (security ke liye).
+ *   2. updateAvatar()   → Profile picture upload handle karta hai.
+ *                         SMART FALLBACK: agar .env mein Cloudinary keys
+ *                         (CLOUD_NAME/API_KEY/API_SECRET) set hain, toh
+ *                         image Cloudinary (cloud storage) pe jaati hai.
+ *                         Agar keys nahi hain (ya upload fail ho jaaye),
+ *                         toh image automatically server ke local
+ *                         `/uploads` folder mein save ho jaati hai —
+ *                         koi crash nahi hota, feature dono tarike se
+ *                         kaam karta hai.
+ *
+ * PROJECT MEIN ROLE: ProfilePage.jsx (frontend) in dono endpoints ko
+ * call karta hai jab user apni settings save karta hai.
+ */
+
 const fs = require('fs');
 const cloudinary = require('../config/cloudinary');
 const User = require('../models/User');
@@ -9,6 +33,8 @@ const User = require('../models/User');
  */
 const updateProfile = async (req, res) => {
   try {
+    // '+password' zaroori hai kyunki agar password change karna ho toh
+    // current password verify karne ke liye hashed value chahiye hogi
     const user = await User.findById(req.user._id).select('+password');
 
     if (!user) {
@@ -17,9 +43,10 @@ const updateProfile = async (req, res) => {
 
     const { name, email, currentPassword, newPassword } = req.body;
 
-    // Update basic info
+    // Naam update — simple, koi extra check nahi chahiye
     if (name) user.name = name;
-    
+
+    // Email update — dusra koi user pehle se wo email use toh nahi kar raha
     if (email && email !== user.email) {
       const emailExists = await User.findOne({ email });
       if (emailExists) {
@@ -28,7 +55,9 @@ const updateProfile = async (req, res) => {
       user.email = email;
     }
 
-    // Handle password change if requested
+    // Password change — sirf tabhi allow karo jab user apna CURRENT
+    // password sahi de (security ke liye, taaki koi aur session hijack
+    // karke silently password na badal sake)
     if (newPassword) {
       if (!currentPassword) {
         return res.status(400).json({ message: 'Please provide current password to set a new password' });
@@ -43,12 +72,16 @@ const updateProfile = async (req, res) => {
         return res.status(400).json({ message: 'New password must be at least 6 characters' });
       }
 
+      // Yahan sirf plain-text assign ho raha hai — User.js ka pre('save')
+      // hook automatically hash kar dega save hone se pehle (kyunki
+      // isModified('password') true hoga is case mein)
       user.password = newPassword;
     }
 
     await user.save();
 
-    // Fetch user without password to send back
+    // Password field wapas na bheje, isliye dobara fresh query (jo by
+    // default password exclude karti hai)
     const updatedUser = await User.findById(user._id);
 
     res.json({
@@ -77,7 +110,7 @@ const updateAvatar = async (req, res) => {
 
     const user = await User.findById(req.user._id);
     if (!user) {
-      // Clean up uploaded file
+      // User na mile toh uploaded temp file bhi cleanup kar do (disk space waste na ho)
       if (fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
       }
@@ -86,14 +119,16 @@ const updateAvatar = async (req, res) => {
 
     let avatarUrl = '';
 
-    // Check if Cloudinary configurations are present in ENV
-    const hasCloudinary = 
-      process.env.CLOUDINARY_CLOUD_NAME && 
-      process.env.CLOUDINARY_API_KEY && 
+    // .env mein Cloudinary credentials set hain ya nahi — isi se decide
+    // hota hai cloud storage use hoga ya local server storage
+    const hasCloudinary =
+      process.env.CLOUDINARY_CLOUD_NAME &&
+      process.env.CLOUDINARY_API_KEY &&
       process.env.CLOUDINARY_API_SECRET;
 
     if (hasCloudinary) {
       try {
+        // Cloudinary pe upload + auto resize/crop to 150x150 (avatar ke liye kaafi hai)
         const result = await cloudinary.uploader.upload(req.file.path, {
           folder: 'interview_ai_avatars',
           width: 150,
@@ -101,18 +136,20 @@ const updateAvatar = async (req, res) => {
           crop: 'fill',
         });
         avatarUrl = result.secure_url;
-        
-        // Remove file from local server uploads
+
+        // Cloud pe upload ho gaya, ab local temp copy delete kar do
         if (fs.existsSync(req.file.path)) {
           fs.unlinkSync(req.file.path);
         }
       } catch (cloudinaryError) {
+        // Cloudinary down ho ya keys galat hon — crash mat karo, local
+        // storage pe silently fallback kar jao
         console.warn('Cloudinary upload failed, falling back to local storage:', cloudinaryError.message);
-        // Fallback to local storage link
         avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
       }
     } else {
-      // Local storage fallback link
+      // Cloudinary configured hi nahi hai (jaisa abhi is project mein hai) —
+      // seedha local /uploads folder ka URL bana do
       avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     }
 

@@ -1,269 +1,222 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { updateProfileSuccess, updateAvatarSuccess } from '../redux/slices/authSlice';
+import { updateProfileSuccess } from '../redux/slices/authSlice';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { User, Mail, ShieldAlert, KeyRound, Loader2, Camera, UserSquare } from 'lucide-react';
+import { User, Mail, KeyRound, Loader2, UserSquare, Shield, Edit3, CheckCircle } from 'lucide-react';
+
+const fadeUp = (delay = 0) => ({
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay } },
+});
 
 const ProfilePage = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
 
-  // Basic Info Form State
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  const [infoLoading, setInfoLoading] = useState(false);
+  const [confirmNew, setConfirmNew] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  // Avatar Upload State
-  const [avatarLoading, setAvatarLoading] = useState(false);
-
-  // Submit profile edits
-  const handleUpdateProfile = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email) {
-      return toast.error('Name and email cannot be blank');
-    }
-
+    if (!name || !email) return toast.error('Name and email cannot be blank');
     if (newPassword) {
-      if (newPassword.length < 6) {
-        return toast.error('New password must be at least 6 characters');
-      }
-      if (newPassword !== confirmNewPassword) {
-        return toast.error('New passwords do not match');
-      }
+      if (newPassword.length < 6) return toast.error('Password must be at least 6 characters');
+      if (newPassword !== confirmNew) return toast.error('Passwords do not match');
     }
-
-    setInfoLoading(true);
+    setLoading(true);
     try {
       const payload = { name, email };
-      if (newPassword) {
-        payload.currentPassword = currentPassword;
-        payload.newPassword = newPassword;
-      }
-
-      const response = await api.put('/profile/update', payload);
-      dispatch(updateProfileSuccess(response.data));
-      toast.success('Profile details updated successfully');
-
-      // Clear password fields
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmNewPassword('');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to update profile settings');
+      if (newPassword) { payload.currentPassword = currentPassword; payload.newPassword = newPassword; }
+      const { data } = await api.put('/profile/update', payload);
+      dispatch(updateProfileSuccess(data));
+      toast.success('Profile updated successfully!');
+      setCurrentPassword(''); setNewPassword(''); setConfirmNew('');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Update failed');
     } finally {
-      setInfoLoading(false);
+      setLoading(false);
     }
   };
 
-  // Submit Avatar Upload
-  const handleAvatarChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Check size limit (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return toast.error('Image size must be less than 5MB');
-    }
-
-    const formData = new FormData();
-    formData.append('avatar', file);
-
-    setAvatarLoading(true);
-    try {
-      const response = await api.post('/profile/avatar', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      dispatch(updateAvatarSuccess(response.data.avatar));
-      toast.success('Avatar updated successfully!');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to upload avatar image');
-    } finally {
-      setAvatarLoading(false);
-    }
+  const S = { fontFamily: 'Inter, system-ui, sans-serif' };
+  const inputStyle = {
+    width: '100%', padding: '12px 16px', borderRadius: 10,
+    background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+    color: 'white', fontSize: 13, outline: 'none', transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
   };
+  const labelStyle = { fontSize: 11, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700, marginBottom: 6, display: 'block' };
+  const cardStyle = { background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: 28 };
+
+  const initials = user?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 relative z-10">
-      <div className="flex items-center space-x-3 mb-2">
-        <div className="w-10 h-10 rounded-xl bg-neonBlue/10 border border-neonBlue/20 flex items-center justify-center text-neonBlue">
-          <UserSquare className="w-5 h-5" />
+    <div style={{ ...S, maxWidth: 900, margin: '0 auto' }}>
+
+      {/* Header */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp(0)} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32 }}>
+        <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(0,240,255,0.1)', border: '1px solid rgba(0,240,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <UserSquare style={{ width: 20, height: 20, color: '#00f0ff' }} />
         </div>
         <div>
-          <h1 className="text-2xl font-extrabold text-white">Profile Settings</h1>
-          <p className="text-gray-400 text-xs mt-0.5">Manage your personal metrics and security settings</p>
+          <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>Profile Settings</h1>
+          <p style={{ color: '#4b5563', fontSize: 12, marginTop: 2 }}>Manage your account information and security settings</p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left Card: Avatar Box */}
-        <div className="md:col-span-1 glass-panel p-6 rounded-2xl border border-darkBorder flex flex-col items-center justify-center space-y-5 h-fit shadow-glass">
-          <div className="relative group">
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }}>
+
+        {/* ── Left: Avatar Card ── */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp(0.1)} style={{ ...cardStyle, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, height: 'fit-content' }}>
+
+          {/* Avatar */}
+          <div style={{ position: 'relative' }}>
             {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.name}
-                className="w-32 h-32 rounded-full object-cover border-2 border-neonBlue/50 shadow-neon-blue transition duration-300 group-hover:opacity-75"
-              />
+              <img src={user.avatar} alt={user.name} style={{ width: 100, height: 100, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(0,240,255,0.3)' }} />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-neonPurple/10 border-2 border-neonPurple/50 text-neonPurple flex items-center justify-center font-extrabold text-3xl transition duration-300 group-hover:opacity-75 shadow-neon-purple">
-                {user?.name?.charAt(0).toUpperCase()}
+              <div style={{ width: 100, height: 100, borderRadius: '50%', background: 'linear-gradient(135deg,#00f0ff,#ab22ff)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, fontWeight: 900, color: 'black', border: '3px solid rgba(0,240,255,0.3)' }}>
+                {initials}
               </div>
             )}
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: '#0a0a14', border: '2px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Edit3 style={{ width: 12, height: 12, color: '#6b7280' }} />
+            </div>
+          </div>
 
-            {/* Hover Camera overlay */}
-            <label className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer transition duration-300">
-              <Camera className="w-6 h-6 text-white" />
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleAvatarChange}
-                className="hidden"
-                disabled={avatarLoading}
-              />
-            </label>
+          {/* Name & Email */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: 'white', marginBottom: 4 }}>{user?.name}</div>
+            <div style={{ fontSize: 12, color: '#4b5563' }}>{user?.email}</div>
+          </div>
 
-            {avatarLoading && (
-              <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
-                <Loader2 className="w-6 h-6 text-neonBlue animate-spin" />
+          {/* Account info */}
+          <div style={{ width: '100%', paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+            {[
+              { label: 'Account Type', value: 'Free Plan', color: '#22c55e' },
+              { label: 'Member Since', value: '2026', color: '#00f0ff' },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <span style={{ fontSize: 12, color: '#4b5563' }}>{label}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color }}>{value}</span>
               </div>
-            )}
+            ))}
           </div>
 
-          <div className="text-center">
-            <h3 className="text-lg font-bold text-white leading-snug">{user?.name}</h3>
-            <p className="text-gray-400 text-xs mt-0.5">{user?.email}</p>
+          {/* Security badge */}
+          <div style={{ width: '100%', padding: '12px', borderRadius: 10, background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Shield style={{ width: 14, height: 14, color: '#22c55e', flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 600 }}>Account Secured with JWT</span>
           </div>
+        </motion.div>
 
-          <div className="w-full pt-4 border-t border-white/5 text-[10px] text-gray-500 text-center leading-normal">
-            Max upload size: 5MB.<br />Supports JPEG, PNG, or WEBP.
-          </div>
-        </div>
+        {/* ── Right: Form ── */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp(0.15)}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* Right Card: Info Form */}
-        <div className="md:col-span-2">
-          <motion.form
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
-            onSubmit={handleUpdateProfile}
-            className="glass-panel p-8 rounded-2xl border border-darkBorder space-y-6 shadow-glass"
-          >
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-2">Update Account Information</h3>
+            {/* Personal Info */}
+            <div style={cardStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+                <User style={{ width: 14, height: 14, color: '#00f0ff' }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Personal Information</span>
+              </div>
 
-            {/* Profile input info fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                    <User className="w-4 h-4" />
-                  </span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Full Name</label>
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
-                    required
+                    type="text" value={name} onChange={e => setName(e.target.value)}
+                    style={inputStyle} required
+                    onFocus={e => e.target.style.borderColor = 'rgba(0,240,255,0.4)'}
+                    onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                    <Mail className="w-4 h-4" />
-                  </span>
+                <div>
+                  <label style={labelStyle}>Email Address</label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
-                    required
+                    type="email" value={email} onChange={e => setEmail(e.target.value)}
+                    style={inputStyle} required
+                    onFocus={e => e.target.style.borderColor = 'rgba(0,240,255,0.4)'}
+                    onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Password security separator */}
-            <div className="pt-4 border-t border-white/5 space-y-4">
-              <h4 className="text-xs font-bold text-neonPurple flex items-center space-x-1.5 uppercase">
-                <KeyRound className="w-3.5 h-3.5" />
-                <span>Security / Password Change (Optional)</span>
-              </h4>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password if setting a new one"
-                  className="w-full px-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
-                  required={!!newPassword}
-                />
+            {/* Security */}
+            <div style={cardStyle}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+                <KeyRound style={{ width: 14, height: 14, color: '#ab22ff' }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Change Password</span>
+                <span style={{ fontSize: 10, color: '#4b5563', fontWeight: 500 }}>(optional)</span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-                    New Password
-                  </label>
+                  <label style={labelStyle}>Current Password</label>
                   <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 6 characters"
-                    className="w-full px-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
+                    type="password" value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    placeholder="Required only if changing password"
+                    style={inputStyle} required={!!newPassword}
+                    onFocus={e => e.target.style.borderColor = 'rgba(171,34,255,0.4)'}
+                    onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
                   />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-                    Confirm New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={confirmNewPassword}
-                    onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    placeholder="Confirm new password"
-                    className="w-full px-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={labelStyle}>New Password</label>
+                    <input
+                      type="password" value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      style={inputStyle}
+                      onFocus={e => e.target.style.borderColor = 'rgba(171,34,255,0.4)'}
+                      onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                    />
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Confirm New Password</label>
+                    <input
+                      type="password" value={confirmNew}
+                      onChange={e => setConfirmNew(e.target.value)}
+                      placeholder="Repeat new password"
+                      style={inputStyle}
+                      onFocus={e => e.target.style.borderColor = 'rgba(171,34,255,0.4)'}
+                      onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Submit */}
-            <button
-              type="submit"
-              disabled={infoLoading}
-              className="w-full sm:w-auto px-6 py-3 rounded-lg bg-neon-gradient text-white font-semibold text-sm shadow-neon-blue bg-neon-gradient-hover hover:scale-105 active:scale-95 disabled:opacity-50 transition duration-200 flex items-center justify-center space-x-2"
-            >
-              {infoLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Saving Updates...</span>
-                </>
-              ) : (
-                <span>Save Profile Changes</span>
-              )}
-            </button>
-          </motion.form>
-        </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button type="submit" disabled={loading} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '12px 28px', borderRadius: 12,
+                background: loading ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)',
+                color: loading ? '#6b7280' : 'black',
+                fontWeight: 800, fontSize: 13, cursor: loading ? 'not-allowed' : 'pointer',
+                border: 'none', transition: 'transform 0.2s',
+              }}
+                onMouseEnter={e => !loading && (e.currentTarget.style.transform = 'scale(1.03)')}
+                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                {loading
+                  ? <><Loader2 style={{ width: 14, height: 14, animation: 'spin 0.8s linear infinite' }} /> Saving...</>
+                  : <><CheckCircle style={{ width: 14, height: 14 }} /> Save Changes</>
+                }
+                <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </div>
     </div>
   );

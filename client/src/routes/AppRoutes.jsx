@@ -16,6 +16,8 @@ import InterviewSetup from '../pages/InterviewSetup';
 import InterviewSession from '../pages/InterviewSession';
 import ProfilePage from '../pages/ProfilePage';
 import AnalyticsPage from '../pages/AnalyticsPage';
+import CompanyDSASetup from '../pages/CompanyDSASetup';
+import CompanyDSASession from '../pages/CompanyDSASession';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -55,6 +57,22 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <InterviewSession />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dsa-practice/setup"
+          element={
+            <ProtectedRoute>
+              <CompanyDSASetup />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dsa-practice/session"
+          element={
+            <ProtectedRoute>
+              <CompanyDSASession />
             </ProtectedRoute>
           }
         />

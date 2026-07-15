@@ -1,7 +1,40 @@
+/**
+ * FILE: client/src/redux/slices/interviewSlice.js
+ * ================================================================
+ * YE FILE KYA HAI: Normal AI-powered interview session ka poora
+ * frontend state — "interview" slice of the Redux store.
+ *
+ * DO ASYNC ACTIONS:
+ *   1. startInterview()  → Role/Level/Type/Difficulty backend ko
+ *      bhejta hai, Ollama-generated questions wapas milte hain
+ *   2. submitInterview()  → Saare answers backend ko bhejta hai,
+ *      Ollama ka poora evaluation (feedback) wapas milta hai
+ *
+ * LOCALSTORAGE PERSISTENCE (bahut important feature):
+ *   Current interview, uske answers, aur current question index —
+ *   teeno localStorage mein save hote hain real-time (har answer
+ *   save hone pe). Isliye agar user galti se tab band kar de ya
+ *   browser refresh ho jaaye interview ke beech mein, poora session
+ *   (kaunsa question tha, kya answers diye the) wapas load ho jaata
+ *   hai — koi data loss nahi hota.
+ *
+ * SYNC REDUCERS:
+ *   saveAnswer         → Ek question ka answer save/update karta hai
+ *   nextQuestion / prevQuestion → Question navigate karte hain
+ *   setQuestionIndex   → Directly kisi bhi question pe jump karo
+ *   clearActiveInterview → Interview khatam hone ke baad sab reset
+ *   clearFeedback      → Purana feedback clear karo (naya interview shuru karne se pehle)
+ *
+ * PROJECT MEIN ROLE: InterviewSetup.jsx (start karta hai),
+ * InterviewSession.jsx (poora session yahin manage hota hai),
+ * dono is slice ko heavily use karte hain.
+ */
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
-// Initial state reading from localStorage for session persistence
+// Page load hote hi localStorage se koi in-progress interview session
+// (agar tab crash/refresh hua ho) wapas restore karo
 let cachedInterview = null;
 let cachedAnswers = [];
 let cachedIndex = 0;
@@ -23,12 +56,13 @@ const initialState = {
   feedback: null,
 };
 
-// Start a new interview
+// Naya interview start karo — Ollama se questions generate hoke aate hain
 export const startInterview = createAsyncThunk(
   'interview/generate',
   async (configs, { rejectWithValue }) => {
     try {
       const response = await api.post('/interview/generate', configs);
+      // Fresh session localStorage mein persist karo
       localStorage.setItem('currentInterview', JSON.stringify(response.data));
       localStorage.setItem('interviewAnswers', JSON.stringify([]));
       localStorage.setItem('interviewIndex', '0');
@@ -40,13 +74,13 @@ export const startInterview = createAsyncThunk(
   }
 );
 
-// Submit interview answers
+// Interview submit karo — Ollama evaluate karke poora feedback deta hai
 export const submitInterview = createAsyncThunk(
   'interview/submit',
   async ({ interviewId, answers }, { rejectWithValue }) => {
     try {
       const response = await api.post('/interview/submit', { interviewId, answers });
-      // Clean up localStorage session cache upon submission
+      // Interview complete ho gaya — localStorage cache cleanup karo
       localStorage.removeItem('currentInterview');
       localStorage.removeItem('interviewAnswers');
       localStorage.removeItem('interviewIndex');
@@ -62,6 +96,7 @@ const interviewSlice = createSlice({
   name: 'interview',
   initialState,
   reducers: {
+    // Ek question ka answer save/update karo (aur localStorage sync bhi)
     saveAnswer(state, action) {
       const { questionIndex, answerText, audioUrl } = action.payload;
       const existingIdx = state.answers.findIndex((ans) => ans.questionIndex === questionIndex);
@@ -90,6 +125,7 @@ const interviewSlice = createSlice({
       state.currentIndex = action.payload;
       localStorage.setItem('interviewIndex', action.payload.toString());
     },
+    // Interview poori tarah khatam — sab kuch (state + localStorage) reset karo
     clearActiveInterview(state) {
       state.currentInterview = null;
       state.currentIndex = 0;
@@ -106,7 +142,7 @@ const interviewSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Start Interview
+      // startInterview lifecycle
       .addCase(startInterview.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -122,14 +158,14 @@ const interviewSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Submit Interview
+      // submitInterview lifecycle
       .addCase(submitInterview.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(submitInterview.fulfilled, (state, action) => {
         state.loading = false;
-        state.feedback = action.payload;
+        state.feedback = action.payload; // Yehi feedback InterviewSession.jsx report screen pe dikhata hai
         state.currentInterview = null;
         state.currentIndex = 0;
         state.answers = [];

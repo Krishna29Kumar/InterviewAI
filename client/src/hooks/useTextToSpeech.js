@@ -1,3 +1,22 @@
+/**
+ * FILE: client/src/hooks/useTextToSpeech.js
+ * ================================================================
+ * YE FILE KYA HAI: "Read Question Aloud" feature ka logic — browser
+ * ke built-in Text-to-Speech (Web Speech Synthesis API) ko wrap karta
+ * hai. Koi backend/paid API use nahi hoti, poora free hai.
+ *
+ * FUNCTIONS:
+ *   speak(text) → Diya gaya text bolna shuru karta hai. Agar koi
+ *      Google/Natural-sounding voice available ho browser mein, use
+ *      priority se select karta hai (default robotic voice se better
+ *      lagta hai).
+ *   stop()      → Turant bolna band kar deta hai
+ *
+ * PROJECT MEIN ROLE: InterviewSession.jsx mein "Read Out Loud (TTS)"
+ * button is hook ko use karta hai taaki candidate question sun sake,
+ * padhna zaroori na ho.
+ */
+
 import { useState, useEffect, useRef } from 'react';
 
 export const useTextToSpeech = () => {
@@ -5,7 +24,7 @@ export const useTextToSpeech = () => {
   const utteranceRef = useRef(null);
 
   useEffect(() => {
-    // Stop speaking when component unmounts
+    // Component unmount hone pe agar kuch bol raha ho toh band kar do
     return () => {
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -19,13 +38,12 @@ export const useTextToSpeech = () => {
       return;
     }
 
-    // Cancel active synthesis
-    window.speechSynthesis.cancel();
+    window.speechSynthesis.cancel(); // Pehle se koi bol raha ho toh rok do
 
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Use default premium voice if available
+    // Achhi quality wali voice dhoondo (Google/Natural), default robotic se better
     const voices = window.speechSynthesis.getVoices();
     const naturalVoice = voices.find(
       (v) => v.name.includes('Google') || v.name.includes('Natural') || v.lang === 'en-US'
@@ -34,17 +52,11 @@ export const useTextToSpeech = () => {
       utterance.voice = naturalVoice;
     }
 
-    utterance.rate = 1.0; // standard reading speed
+    utterance.rate = 1.0;  // Normal reading speed
     utterance.pitch = 1.0;
 
-    utterance.onstart = () => {
-      setIsPlaying(true);
-    };
-
-    utterance.onend = () => {
-      setIsPlaying(false);
-    };
-
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
     utterance.onerror = (e) => {
       console.error('SpeechSynthesis error:', e);
       setIsPlaying(false);

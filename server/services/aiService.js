@@ -1,13 +1,40 @@
 /**
  * FILE: server/services/aiService.js
- * =====================================
- * OpenAI HATAYA — Ollama + MongoDB se replace kiya
+ * ================================================================
+ * YE FILE KYA HAI: Poore project ka "AI brain" — jahan bhi kisi AI
+ * model (Ollama, jo locally chalta hai) se baat karni hoti hai,
+ * wo yahin se hoti hai. Pehle OpenAI GPT use hota tha, ab poori
+ * tarah Ollama (free, local LLM) + MongoDB pe shift kar diya gaya hai.
  *
- * Kya karta hai:
- * 1. generateQuestions() → MongoDB se scraped questions fetch karo
- *                        → Ollama se personalize karo
- * 2. analyzeInterview()  → Ollama llama3 se real AI feedback
- * 3. transcribeAudio()   → Web Speech API fallback (Whisper hataya)
+ * TEEN MAIN FUNCTIONS:
+ *   1. generateQuestions() → Naya interview start karte waqt questions
+ *      banata hai. Pehle MongoDB ke 'questions' collection se role-
+ *      relevant questions nikaalta hai (web-scraped data), phir
+ *      Ollama ko deta hai "in mein se best N chuno aur thoda rephrase
+ *      karo is role/level/difficulty ke hisaab se". Agar Ollama fail
+ *      ho jaaye (offline ho ya JSON parse na ho), MongoDB wale
+ *      questions seedhe use ho jaate hain — agar wo bhi na milein,
+ *      hardcoded fallback questions (niche defined) use hote hain.
+ *      Matlab 3-level ka safety net hai, kabhi bhi khaali response nahi jaata.
+ *
+ *   2. analyzeInterview() → Interview submit hone pe Ollama se poora
+ *      evaluation mangwata hai — per-metric scores (technical,
+ *      communication, confidence, grammar, problem-solving) +
+ *      strengths/weaknesses/suggestions, sab structured JSON mein.
+ *      Prompt mein explicit rule likhi hai ki khaali answers ko 0
+ *      score milna chahiye (LLM ko zyada generous hone se rokne ke
+ *      liye) — is baat ka ek aur layer interviewController.js mein
+ *      bhi hai (double safety).
+ *
+ *   3. transcribeAudio() → Jaan-boojh kar disabled hai (Whisper/OpenAI
+ *      hata diya gaya). Ye function hamesha error throw karta hai,
+ *      jisse interviewController.js catch karke frontend ko signal
+ *      deta hai ki browser ka apna built-in Web Speech API use karo
+ *      (free, koi extra API cost nahi).
+ *
+ * PROJECT MEIN ROLE: interviewController.js in teeno functions ko
+ * call karta hai — /api/interview/generate, /api/interview/submit,
+ * aur /api/interview/transcribe endpoints ke through.
  */
 
 const axios = require('axios');
@@ -17,7 +44,8 @@ const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3';
 
 // ─────────────────────────────────────────────────
-// Domain mapping — role → MongoDB domain
+// Role → MongoDB "domain" mapping
+// Har job role kis topic/domain ke questions se best match karega
 // ─────────────────────────────────────────────────
 const ROLE_TO_DOMAIN = {
   'Frontend Developer': ['frontend'],
@@ -45,10 +73,10 @@ const ROLE_TO_DOMAIN = {
   'NLP Engineer': ['nlp'],
   'Computer Vision Engineer': ['computer_vision'],
   'Software Engineer': ['dsa', 'cs_fundamentals'],
-  'Default': ['dsa', 'frontend', 'backend'],
+  'Default': ['dsa', 'frontend', 'backend'], // Agar role list mein na mile
 };
 
-// Difficulty mapping
+// Experience level → question difficulty mapping
 const LEVEL_TO_DIFFICULTY = {
   'Junior': 'easy',
   'Mid': 'medium',
@@ -56,7 +84,8 @@ const LEVEL_TO_DIFFICULTY = {
 };
 
 // ─────────────────────────────────────────────────
-// Ollama call helper
+// Ollama ko call karne ka common helper — dono generateQuestions
+// aur analyzeInterview yehi function use karte hain
 // ─────────────────────────────────────────────────
 async function ollamaGenerate(prompt, systemPrompt = '') {
   try {
@@ -65,52 +94,51 @@ async function ollamaGenerate(prompt, systemPrompt = '') {
       {
         model: OLLAMA_MODEL,
         prompt: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
-        stream: false,
+        stream: false, // Poora response ek saath chahiye, streaming nahi
         options: {
-          temperature: 0.7,
-          num_predict: 2000,
+          temperature: 0.7,   // Thoda creative, lekin zyada random nahi
+          num_predict: 2000,  // Max tokens jawab mein
         },
       },
-      { timeout: 120000 }
+      { timeout: 120000 } // Ollama local model hai, thoda slow ho sakta hai — 2 min timeout
     );
     return response.data.response || '';
   } catch (err) {
     console.error('[Ollama] Error:', err.message);
-    return null;
+    return null; // null return karo, calling function apna fallback use kar lega
   }
 }
 
-// ─────────────────────────────────────────────────
-// MongoDB questions collection
-// ─────────────────────────────────────────────────
+// MongoDB ke 'questions' collection ka reference (web-scraped interview questions)
 function getQuestionsCollection() {
   return mongoose.connection.db.collection('questions');
 }
 
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
 // 1. GENERATE QUESTIONS
-// MongoDB se fetch → Ollama se rephrase/personalize
-// ─────────────────────────────────────────────────
+// Flow: MongoDB se relevant questions fetch → Ollama se best N chuno
+//       aur rephrase karo → fail ho toh MongoDB wale hi seedhe do →
+//       wo bhi na mile toh hardcoded fallback do
+// ═══════════════════════════════════════════════════════════════
 const generateQuestions = async (role, level, type, difficulty, numQuestions = 5, company = null) => {
   const count = parseInt(numQuestions) || 5;
 
   try {
-    // MongoDB se questions fetch karo
     const col = getQuestionsCollection();
     const domains = ROLE_TO_DOMAIN[role] || ROLE_TO_DOMAIN['Default'];
     const difficultyLevel = LEVEL_TO_DIFFICULTY[level] || 'medium';
 
-    // Query build karo
+    // MongoDB query — role ke domain(s) se match karo
     const query = {
       domain: { $in: domains },
     };
 
-    // Difficulty filter
+    // Difficulty filter (Medium ke liye easy bhi allow, zyada options milein)
     if (difficulty === 'Easy') query.difficulty = 'easy';
     if (difficulty === 'Hard') query.difficulty = 'hard';
     if (difficulty === 'Medium') query.difficulty = { $in: ['medium', 'easy'] };
 
-    // Type filter
+    // Behavioral interview ho toh alag keyword-based filter lagao
     if (type === 'Behavioral') {
       query.$or = [
         { topic: { $in: ['behavioral', 'hr', 'soft_skills'] } },
@@ -118,13 +146,12 @@ const generateQuestions = async (role, level, type, difficulty, numQuestions = 5
       ];
     }
 
-    // Fetch more than needed, then randomize
+    // Zaroorat se zyada fetch karo (5x), phir shuffle karke variety milegi
     const allQuestions = await col
       .find(query)
       .limit(count * 5)
       .toArray();
 
-    // Shuffle
     const shuffled = allQuestions.sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, Math.min(count * 2, allQuestions.length));
 
@@ -133,7 +160,7 @@ const generateQuestions = async (role, level, type, difficulty, numQuestions = 5
       return getFallbackQuestions(role, type, count);
     }
 
-    // Ollama se personalize karo
+    // Ollama ko bolo: in questions mein se best N chuno aur personalize karo
     const questionTexts = selected.slice(0, count * 2).map(q => q.question).join('\n');
 
     const ollamaPrompt = `You are an expert technical interviewer.
@@ -161,7 +188,8 @@ Example format:
 
     if (ollamaResponse) {
       try {
-        // JSON extract karo response se
+        // Ollama kabhi-kabhi JSON ke aage-peeche extra text bhej deta hai —
+        // regex se sirf [...] wala hissa nikaalo
         const jsonMatch = ollamaResponse.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
@@ -174,7 +202,7 @@ Example format:
       }
     }
 
-    // Ollama fail — direct MongoDB questions use karo
+    // Ollama fail ho gaya (ya JSON parse nahi hua) — MongoDB wale questions seedhe de do
     return selected.slice(0, count).map(q => ({ questionText: q.question }));
 
   } catch (err) {
@@ -183,11 +211,12 @@ Example format:
   }
 };
 
-// ─────────────────────────────────────────────────
-// 2. ANALYZE INTERVIEW — Ollama se real feedback
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// 2. ANALYZE INTERVIEW — Ollama se real AI feedback
+// ═══════════════════════════════════════════════════════════════
 const analyzeInterview = async (role, level, questions, answers) => {
   try {
+    // Har question ko uske corresponding answer ke saath pair karo
     const qaPairs = questions.map((q, idx) => {
       const ans = answers.find(a => a.questionIndex === idx);
       return {
@@ -207,6 +236,12 @@ Always respond with valid JSON only — no markdown, no explanation outside JSON
     const prompt = `Evaluate this ${level}-level ${role} interview:
 
 ${qaText}
+
+IMPORTANT SCORING RULE: If an answer is "No answer provided." or empty/blank,
+that question's score in feedbackDetails MUST be 0, with weaknesses noting no
+response was given. Do not award any partial credit for unanswered questions.
+If ALL answers are empty, every score (technicalScore, communicationScore,
+confidenceScore, grammarScore, problemSolvingScore, averageScore) MUST be 0.
 
 Return this exact JSON structure (no markdown):
 {
@@ -235,11 +270,33 @@ Return this exact JSON structure (no markdown):
 
     if (response) {
       try {
-        // JSON extract karo
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           if (parsed.averageScore !== undefined) {
+            // SAFETY NET: Ollama kabhi-kabhi 'averageScore' toh bhej deta hai,
+            // lekin baaki sub-metric fields (technicalScore, communicationScore,
+            // waghera) mein se koi ek bhool jaata hai — jisse Analytics page pe
+            // wo specific bar blank/dash dikhti thi. Yahan har missing field ko
+            // averageScore se fill karte hain, taaki koi bhi metric kabhi
+            // undefined na ho.
+            const avg = parsed.averageScore;
+            const numericFields = [
+              'technicalScore', 'communicationScore', 'confidenceScore',
+              'grammarScore', 'problemSolvingScore',
+            ];
+            numericFields.forEach((field) => {
+              if (typeof parsed[field] !== 'number') {
+                parsed[field] = avg;
+              }
+            });
+            if (!Array.isArray(parsed.feedbackDetails)) {
+              parsed.feedbackDetails = [];
+            }
+            if (typeof parsed.strengths !== 'string') parsed.strengths = 'N/A';
+            if (typeof parsed.weaknesses !== 'string') parsed.weaknesses = 'N/A';
+            if (typeof parsed.suggestions !== 'string') parsed.suggestions = 'N/A';
+
             return parsed;
           }
         }
@@ -248,6 +305,7 @@ Return this exact JSON structure (no markdown):
       }
     }
 
+    // Ollama offline ho ya JSON parse fail ho jaaye — length-based fallback scoring use karo
     return generateFallbackFeedback(questions, answers);
 
   } catch (err) {
@@ -256,18 +314,20 @@ Return this exact JSON structure (no markdown):
   }
 };
 
-// ─────────────────────────────────────────────────
-// 3. TRANSCRIBE — Whisper hataya, Web Speech use karo
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// 3. TRANSCRIBE — Jaan-boojh kar disabled (Whisper/OpenAI hataya)
+// ═══════════════════════════════════════════════════════════════
 const transcribeAudio = async (filePath) => {
-  // Whisper/OpenAI nahi hai ab
-  // Frontend Web Speech API use karega
+  // Ye function hamesha error throw karta hai. interviewController.js
+  // isko catch karke frontend ko 'fallback: true' signal bhejta hai,
+  // jisse browser ka apna free Web Speech API use hone lagta hai —
+  // koi paid transcription service ki zaroorat nahi.
   throw new Error('Whisper not configured. Using browser Web Speech API.');
 };
 
-// ─────────────────────────────────────────────────
-// FALLBACK — Jab Ollama bhi fail ho
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// FALLBACK QUESTIONS — jab MongoDB mein bhi kuch na mile
+// ═══════════════════════════════════════════════════════════════
 function getFallbackQuestions(role, type, count) {
   const FALLBACK = {
     'Frontend Developer': [
@@ -337,16 +397,23 @@ function getFallbackQuestions(role, type, count) {
   return shuffled.slice(0, count).map(q => ({ questionText: q }));
 }
 
+// ═══════════════════════════════════════════════════════════════
+// FALLBACK FEEDBACK — jab Ollama poori tarah fail ho jaaye
+// Length-based heuristic scoring (chhota answer = kam score)
+// ═══════════════════════════════════════════════════════════════
 function generateFallbackFeedback(questions, answers) {
   const feedbackDetails = questions.map((q, idx) => {
     const ansObj = answers.find(a => a.questionIndex === idx);
     const text = ansObj ? ansObj.answerText.trim() : '';
-    let score = 30;
+    const isNoAnswer = !text || text.toLowerCase() === 'no answer provided.';
+    let score = 0;
     let strengths = 'N/A';
     let weaknesses = 'No response provided.';
-    let suggestions = 'Try to explain with real-world examples.';
+    let suggestions = 'Attempt the question with a real answer to get scored.';
 
-    if (text.length > 80) {
+    if (isNoAnswer) {
+      score = 0; // Khaali answer = seedha 0, koi partial credit nahi
+    } else if (text.length > 80) {
       score = 85;
       strengths = 'Comprehensive response with good detail.';
       weaknesses = 'Could be more concise in places.';
@@ -372,6 +439,8 @@ function generateFallbackFeedback(questions, answers) {
 
   const avg = Math.round(feedbackDetails.reduce((s, i) => s + i.score, 0) / feedbackDetails.length);
 
+  // Har sub-metric ko average ke aas-paas thoda random variation deke
+  // realistic feel dete hain (bilkul same number har jagah na dikhe)
   return {
     technicalScore: Math.min(100, avg + Math.floor(Math.random() * 6) - 3),
     communicationScore: Math.min(100, avg + Math.floor(Math.random() * 8) - 4),

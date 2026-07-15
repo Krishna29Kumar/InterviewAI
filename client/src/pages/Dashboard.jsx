@@ -6,274 +6,332 @@ import api from '../services/api';
 import toast from 'react-hot-toast';
 import { startInterview } from '../redux/slices/interviewSlice';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Calendar, Play, TrendingUp, Award, Clock, ArrowRight, UserCheck, Inbox } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import {
+  Play, TrendingUp, Award, Clock, ArrowRight,
+  UserCheck, Inbox, Zap, Target, BarChart3,
+  ChevronRight, Sparkles, Brain, Shield,
+} from 'lucide-react';
 
+const fadeUp = (delay = 0) => ({
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay } },
+});
+
+const stagger = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+// ─── Stat Card ────────────────────────────────────────────────
+function StatCard({ icon: Icon, label, value, color, delay, isLight }) {
+  const cardBg = isLight ? '#ffffff' : 'rgba(255,255,255,0.02)';
+  const cardBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.06)';
+  const cardShadow = isLight ? '0 1px 3px rgba(0,0,0,0.06)' : 'none';
+  const labelColor = isLight ? '#64748b' : '#4b5563';
+  const valueColor = isLight ? '#0f172a' : 'white';
+  const resetBorder = isLight ? '#e2e8f0' : 'rgba(255,255,255,0.06)';
+
+  return (
+    <motion.div variants={fadeUp(delay)} style={{
+      background: cardBg,
+      border: cardBorder,
+      borderRadius: 16, padding: '20px 24px',
+      display: 'flex', alignItems: 'center', gap: 16,
+      transition: 'border-color 0.3s',
+      boxShadow: cardShadow,
+    }}
+      onMouseEnter={e => e.currentTarget.style.borderColor = `${color}33`}
+      onMouseLeave={e => e.currentTarget.style.borderColor = resetBorder}
+    >
+      <div style={{
+        width: 48, height: 48, borderRadius: 12,
+        background: `${color}15`, border: `1px solid ${color}30`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+      }}>
+        <Icon style={{ width: 22, height: 22, color }} />
+      </div>
+      <div>
+        <div style={{ fontSize: 11, color: labelColor, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4, fontWeight: 600 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 900, color: valueColor, lineHeight: 1 }}>{value}</div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Score Badge ──────────────────────────────────────────────
+function ScoreBadge({ score }) {
+  const color = score >= 80 ? '#22c55e' : score >= 60 ? '#f59e0b' : '#ef4444';
+  return (
+    <span style={{
+      padding: '3px 10px', borderRadius: 999,
+      background: `${color}15`, border: `1px solid ${color}30`,
+      color, fontSize: 12, fontWeight: 800,
+    }}>
+      {score}%
+    </span>
+  );
+}
+
+// ─── Quick Action Card ────────────────────────────────────────
+function QuickAction({ icon: Icon, title, desc, to, color, delay, isLight }) {
+  const cardBg = isLight ? '#ffffff' : 'rgba(255,255,255,0.02)';
+  const cardBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.06)';
+  const hoverBg = isLight ? `${color}08` : `${color}08`;
+  const resetBorder = isLight ? '#e2e8f0' : 'rgba(255,255,255,0.06)';
+  const titleColor = isLight ? '#1e293b' : 'white';
+  const descColor = isLight ? '#94a3b8' : '#4b5563';
+  const chevronColor = isLight ? '#cbd5e1' : '#374151';
+
+  return (
+    <motion.div variants={fadeUp(delay)}>
+      <Link to={to} style={{ textDecoration: 'none' }}>
+        <div style={{
+          background: cardBg,
+          border: cardBorder,
+          borderRadius: 12, padding: '16px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          transition: 'all 0.2s', cursor: 'pointer',
+        }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = `${color}33`; e.currentTarget.style.background = hoverBg; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = resetBorder; e.currentTarget.style.background = cardBg; }}
+        >
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Icon style={{ width: 16, height: 16, color }} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: titleColor }}>{title}</div>
+            <div style={{ fontSize: 11, color: descColor }}>{desc}</div>
+          </div>
+          <ChevronRight style={{ width: 14, height: 14, color: chevronColor }} />
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+// ─── Custom Tooltip ───────────────────────────────────────────
+function CustomTooltip({ active, payload, label, isLight }) {
+  if (!active || !payload?.length) return null;
+  const tooltipBg = isLight ? '#ffffff' : '#0d0d1a';
+  const tooltipBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.08)';
+  const tooltipShadow = isLight ? '0 4px 12px rgba(0,0,0,0.08)' : '0 4px 12px rgba(0,0,0,0.3)';
+  const labelColor = isLight ? '#64748b' : '#6b7280';
+  const valueColor = isLight ? '#4f46e5' : '#00f0ff';
+
+  return (
+    <div style={{ background: tooltipBg, border: tooltipBorder, borderRadius: 10, padding: '10px 14px', fontSize: 12, boxShadow: tooltipShadow }}>
+      <div style={{ color: labelColor, marginBottom: 4 }}>{label}</div>
+      <div style={{ color: valueColor, fontWeight: 800 }}>{payload[0].value}%</div>
+    </div>
+  );
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────
 const Dashboard = () => {
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector(s => s.auth);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const response = await api.get('/interview/history');
-        setHistory(response.data);
-      } catch (err) {
-        toast.error('Failed to load interview history');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHistory();
+    api.get('/interview/history')
+      .then(r => setHistory(r.data))
+      .catch(() => toast.error('Failed to load interview history'))
+      .finally(() => setLoading(false));
   }, []);
 
-  // Compute stats
-  const totalInterviews = history.length;
-  const completedInterviews = history.filter((i) => i.status === 'completed');
-  const avgScore = completedInterviews.length
-    ? Math.round(completedInterviews.reduce((sum, i) => sum + i.score, 0) / completedInterviews.length)
-    : 0;
+  const completed = history.filter(i => i.status === 'completed');
+  const avgScore = completed.length ? Math.round(completed.reduce((s, i) => s + i.score, 0) / completed.length) : 0;
+  const roles = history.map(i => i.role);
+  const topRole = roles.length ? roles.sort((a, b) => roles.filter(v => v === a).length - roles.filter(v => v === b).length).pop() : 'None';
+  const chartData = [...completed].reverse().slice(-7).map((item, i) => ({ name: `S${i + 1}`, score: item.score, role: item.role }));
 
-  // Get most common role
-  const roles = history.map((i) => i.role);
-  const topRole = roles.length
-    ? roles.sort((a, b) => roles.filter((v) => v === a).length - roles.filter((v) => v === b).length).pop()
-    : 'None';
+  const getScoreColor = s => s >= 80 ? '#22c55e' : s >= 60 ? '#f59e0b' : '#ef4444';
 
-  // Format Recharts data (last 7 completed interviews chronologically)
-  const chartData = [...completedInterviews]
-    .reverse()
-    .slice(-7)
-    .map((item, index) => ({
-      name: `Session ${index + 1}`,
-      score: item.score,
-      role: item.role,
-    }));
+  const S = { fontFamily: 'Inter, system-ui, sans-serif' };
 
-  const handleResumeInterview = (interview) => {
-    // Save to localStorage
-    localStorage.setItem('currentInterview', JSON.stringify(interview));
-    localStorage.setItem('interviewAnswers', JSON.stringify(interview.answers || []));
-    localStorage.setItem('interviewIndex', (interview.answers?.length || 0).toString());
-    
-    // Hard refresh/routing to ensure slice re-hydration
-    window.location.href = '/interview';
-  };
+  // Theme-aware colors
+  const accent = isLight ? '#4f46e5' : '#00f0ff';
+  const accentGrad = isLight ? '#4f46e5' : 'linear-gradient(135deg,#00f0ff,#ab22ff)';
+  const headingColor = isLight ? '#0f172a' : 'white';
+  const bodyColor = isLight ? '#64748b' : '#4b5563';
+  const mutedColor = isLight ? '#94a3b8' : '#374151';
+  const cardBg = isLight ? '#ffffff' : 'rgba(255,255,255,0.02)';
+  const cardBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.06)';
+  const cardShadow = isLight ? '0 1px 3px rgba(0,0,0,0.06)' : 'none';
+  const ctaBg = isLight ? '#4f46e5' : 'linear-gradient(135deg,#00f0ff,#ab22ff)';
+  const ctaColor = isLight ? '#ffffff' : 'black';
+  const ctaShadow = isLight ? '0 4px 14px rgba(79,70,229,0.25)' : '0 0 24px rgba(0,240,255,0.25)';
+  const gridStroke = isLight ? '#e2e8f0' : 'rgba(255,255,255,0.04)';
+  const axisStroke = isLight ? '#94a3b8' : '#374151';
+  const chartAccent = isLight ? '#4f46e5' : '#00f0ff';
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10';
-    if (score >= 60) return 'text-amber-400 border-amber-500/30 bg-amber-500/10';
-    return 'text-rose-400 border-rose-500/30 bg-rose-500/10';
-  };
+  // Table
+  const thColor = isLight ? '#64748b' : '#374151';
+  const rowBorder = isLight ? '1px solid #f1f5f9' : '1px solid rgba(255,255,255,0.03)';
+  const rowHoverBg = isLight ? '#f8fafc' : 'rgba(255,255,255,0.02)';
+  const tdTitleColor = isLight ? '#1e293b' : 'white';
+  const tdSubColor = isLight ? '#94a3b8' : '#4b5563';
+  const levelBg = isLight ? '#f1f5f9' : 'rgba(255,255,255,0.05)';
+  const levelBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.08)';
+  const levelColor = isLight ? '#64748b' : '#6b7280';
+
+  // Start link
+  const startBg = isLight ? 'rgba(79,70,229,0.08)' : 'rgba(0,240,255,0.1)';
+  const startBorder = isLight ? '1px solid rgba(79,70,229,0.2)' : '1px solid rgba(0,240,255,0.2)';
+  const startColor = isLight ? '#4f46e5' : '#00f0ff';
 
   return (
-    <div className="space-y-8 relative z-10">
-      {/* Welcome Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div style={{ ...S, maxWidth: 1100, margin: '0 auto', padding: '0 4px' }}>
+
+      {/* ── Header ── */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp(0)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 className="text-3xl font-extrabold text-white">Welcome, {user?.name}!</h1>
-          <p className="text-gray-400 text-sm">Here is a summary of your interview preparation activity.</p>
+          <div style={{ fontSize: 11, color: bodyColor, textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: 6, fontWeight: 600 }}>
+            Welcome back
+          </div>
+          <h1 style={{ fontSize: 'clamp(24px,4vw,36px)', fontWeight: 900, color: headingColor, letterSpacing: '-1px', marginBottom: 4 }}>
+            {user?.name} 👋
+          </h1>
+          <p style={{ color: bodyColor, fontSize: 13 }}>Here's your interview preparation summary.</p>
         </div>
-        <Link
-          to="/setup"
-          className="flex items-center space-x-2 px-5 py-3 rounded-xl bg-neon-gradient text-white font-semibold text-sm shadow-neon-blue bg-neon-gradient-hover hover:scale-105 active:scale-95 transition duration-300"
-        >
-          <Play className="w-4 h-4 fill-white" />
-          <span>Start New Interview</span>
+        <Link to="/setup" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, background: ctaBg, color: ctaColor, fontWeight: 800, fontSize: 13, textDecoration: 'none', boxShadow: ctaShadow, transition: 'transform 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+          <Sparkles style={{ width: 15, height: 15 }} />
+          Start New Interview
         </Link>
-      </div>
+      </motion.div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Stat 1 */}
-        <div className="glass-panel p-6 rounded-2xl border border-darkBorder flex items-center space-x-4">
-          <div className="p-3 rounded-xl bg-neonBlue/10 border border-neonBlue/20 text-neonBlue">
-            <Clock className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Total Mock Sessions</p>
-            <h3 className="text-2xl font-bold text-white mt-1">{totalInterviews}</h3>
-          </div>
-        </div>
+      {/* ── Stats Grid ── */}
+      <motion.div initial="hidden" animate="visible" variants={stagger} style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 16, marginBottom: 32 }}>
+        <StatCard icon={Clock} label="Total Sessions" value={history.length} color={chartAccent} delay={0} isLight={isLight} />
+        <StatCard icon={Award} label="Average Score" value={`${avgScore}%`} color="#ab22ff" delay={0.05} isLight={isLight} />
+        <StatCard icon={UserCheck} label="Sessions Graded" value={completed.length} color="#22c55e" delay={0.1} isLight={isLight} />
+        <StatCard icon={TrendingUp} label="Top Domain" value={topRole.split(' ')[0]} color="#f59e0b" delay={0.15} isLight={isLight} />
+      </motion.div>
 
-        {/* Stat 2 */}
-        <div className="glass-panel p-6 rounded-2xl border border-darkBorder flex items-center space-x-4">
-          <div className="p-3 rounded-xl bg-neonPurple/10 border border-neonPurple/20 text-neonPurple">
-            <Award className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Average Score</p>
-            <h3 className="text-2xl font-bold text-white mt-1">{avgScore}%</h3>
-          </div>
-        </div>
+      {/* ── Main Grid ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 24 }}>
 
-        {/* Stat 3 */}
-        <div className="glass-panel p-6 rounded-2xl border border-darkBorder flex items-center space-x-4">
-          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-            <UserCheck className="w-6 h-6" />
+        {/* Chart */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp(0.2)} style={{ background: cardBg, border: cardBorder, borderRadius: 16, padding: 24, boxShadow: cardShadow }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: headingColor, marginBottom: 2 }}>Performance Trend</div>
+              <div style={{ fontSize: 11, color: bodyColor }}>Last 7 completed sessions</div>
+            </div>
+            <Link to="/analytics" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: accent, textDecoration: 'none', fontWeight: 600 }}>
+              View Details <ChevronRight style={{ width: 12, height: 12 }} />
+            </Link>
           </div>
-          <div>
-            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Sessions Graded</p>
-            <h3 className="text-2xl font-bold text-white mt-1">{completedInterviews.length}</h3>
-          </div>
-        </div>
-
-        {/* Stat 4 */}
-        <div className="glass-panel p-6 rounded-2xl border border-darkBorder flex items-center space-x-4">
-          <div className="p-3 rounded-xl bg-accentPink/10 border border-accentPink/20 text-accentPink">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Top Role Practice</p>
-            <h3 className="text-lg font-bold text-white mt-1 truncate max-w-[150px]">{topRole}</h3>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Graph & Summary */}
-      {completedInterviews.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-darkBorder">
-            <h3 className="text-lg font-bold text-white mb-4">Performance Trend</h3>
-            <div className="h-64">
+          {chartData.length > 0 ? (
+            <div style={{ height: 220 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
                   <defs>
-                    <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#00f0ff" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#ab22ff" stopOpacity={0}/>
+                    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={isLight ? '#4f46e5' : '#00f0ff'} />
+                      <stop offset="100%" stopColor={isLight ? '#7c3aed' : '#ab22ff'} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                  <Tooltip
-                    contentStyle={{
-                      background: '#131326',
-                      borderColor: 'rgba(255, 255, 255, 0.08)',
-                      borderRadius: '12px',
-                      color: '#fff',
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="score"
-                    stroke="url(#colorScore)"
-                    strokeWidth={3}
-                    dot={{ r: 4, stroke: '#00f0ff', strokeWidth: 2 }}
-                    activeDot={{ r: 6 }}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} />
+                  <XAxis dataKey="name" stroke={axisStroke} fontSize={10} />
+                  <YAxis stroke={axisStroke} fontSize={10} domain={[0, 100]} />
+                  <Tooltip content={<CustomTooltip isLight={isLight} />} />
+                  <Line type="monotone" dataKey="score" stroke="url(#lineGrad)" strokeWidth={3} dot={{ r: 4, fill: chartAccent, strokeWidth: 0 }} activeDot={{ r: 6 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          ) : (
+            <div style={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: mutedColor, fontSize: 13 }}>
+              No data yet — complete an interview to see your trend
+            </div>
+          )}
+        </motion.div>
 
-          {/* Quick Guidance Box */}
-          <div className="glass-panel p-6 rounded-2xl border border-darkBorder flex flex-col justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-white">Interview Guide</h3>
-              <p className="text-gray-400 text-xs mt-2 leading-relaxed">
-                To maximize your rating feedback, speak clearly and try to supply structured code blocks or architectural explanations if appropriate. Use the TTS speaker during session practice to listen to natural pronunciation.
-              </p>
-            </div>
-            <div className="pt-6 mt-6 border-t border-white/5 space-y-3">
-              <Link to="/setup" className="flex items-center justify-between text-xs text-neonBlue hover:underline">
-                <span>Configure custom job roles</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link to="/analytics" className="flex items-center justify-between text-xs text-neonPurple hover:underline">
-                <span>View granular chart reports</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
+        {/* Quick Actions */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp(0.25)} style={{ background: cardBg, border: cardBorder, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 12, boxShadow: cardShadow }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: headingColor, marginBottom: 8 }}>Quick Actions</div>
+          <QuickAction icon={Zap} title="New Interview" desc="Start a fresh session" to="/setup" color={chartAccent} delay={0.3} isLight={isLight} />
+          <QuickAction icon={BarChart3} title="Analytics" desc="View detailed performance" to="/analytics" color="#ab22ff" delay={0.35} isLight={isLight} />
+          <QuickAction icon={Brain} title="Practice Again" desc="Resume where you left off" to="/setup" color="#f59e0b" delay={0.4} isLight={isLight} />
+          <QuickAction icon={Shield} title="Profile Settings" desc="Update your information" to="/profile" color="#22c55e" delay={0.45} isLight={isLight} />
+        </motion.div>
+      </div>
+
+      {/* ── History Table ── */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp(0.3)} style={{ background: cardBg, border: cardBorder, borderRadius: 16, padding: 24, boxShadow: cardShadow }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: headingColor }}>Recent Sessions</div>
+          {history.length > 5 && (
+            <span style={{ fontSize: 11, color: bodyColor }}>Showing last 5</span>
+          )}
         </div>
-      )}
-
-      {/* History Log Table */}
-      <div className="sessions-log-panel glass-panel p-6 rounded-2xl border border-darkBorder">
-        <h3 className="text-lg font-bold text-white mb-6">Recent Sessions</h3>
 
         {loading ? (
-          <div className="py-12 flex items-center justify-center space-x-2 text-gray-400 text-sm">
-            <div className="w-6 h-6 border-2 border-neonBlue border-t-transparent rounded-full animate-spin"></div>
-            <span>Syncing history...</span>
+          <div style={{ padding: '40px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, color: bodyColor, fontSize: 13 }}>
+            <div style={{ width: 20, height: 20, border: `2px solid ${accent}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            Loading sessions...
+            <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
           </div>
         ) : history.length === 0 ? (
-          <div className="py-16 text-center space-y-4 flex flex-col items-center">
-            <Inbox className="w-12 h-12 text-gray-500 opacity-40" />
-            <h4 className="text-gray-300 font-semibold">No interviews practiced yet</h4>
-            <p className="text-gray-500 text-xs max-w-sm">
-              Launch your first interactive mock session to generate AI questions and track performance indicators.
-            </p>
-            <Link
-              to="/setup"
-              className="mt-2 inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-lg bg-neonBlue/10 border border-neonBlue/20 text-neonBlue text-xs font-semibold hover:bg-neonBlue/20 transition duration-200"
-            >
-              <span>Setup Mock Session</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+          <div style={{ padding: '48px 0', textAlign: 'center' }}>
+            <Inbox style={{ width: 40, height: 40, color: mutedColor, margin: '0 auto 12px' }} />
+            <div style={{ fontSize: 15, fontWeight: 700, color: headingColor, marginBottom: 6 }}>No interviews yet</div>
+            <div style={{ fontSize: 13, color: bodyColor, marginBottom: 20 }}>Start your first mock session to track performance</div>
+            <Link to="/setup" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: startBg, border: startBorder, color: startColor, fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+              <Play style={{ width: 12, height: 12 }} /> Start Now
             </Link>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
-                <tr className="border-b border-white/5 text-gray-400 text-xs font-semibold uppercase tracking-wider pb-3">
-                  <th className="pb-3 pr-4">Role / Type</th>
-                  <th className="pb-3 px-4 hidden sm:table-cell">Details</th>
-                  <th className="pb-3 px-4">Status</th>
-                  <th className="pb-3 px-4 text-center">Score</th>
-                  <th className="pb-3 pl-4 text-right">Actions</th>
+                <tr style={{ borderBottom: isLight ? '2px solid #f1f5f9' : '1px solid rgba(255,255,255,0.05)' }}>
+                  {['Role / Type', 'Level', 'Status', 'Score', 'Action'].map(h => (
+                    <th key={h} style={{ textAlign: 'left', padding: '8px 12px', fontSize: 10, color: thColor, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
-                {history.map((interview) => (
-                  <tr key={interview._id} className="hover:bg-white/5 transition duration-150">
-                    <td className="py-4 pr-4">
-                      <p className="font-bold text-white">{interview.role}</p>
-                      <p className="text-gray-500 text-xs mt-0.5">{interview.type} Interview</p>
+              <tbody>
+                {history.slice(0, 8).map((interview) => (
+                  <tr key={interview._id} style={{ borderBottom: rowBorder, transition: 'background 0.2s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = rowHoverBg}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    <td style={{ padding: '14px 12px' }}>
+                      <div style={{ fontWeight: 700, color: tdTitleColor, fontSize: 13 }}>{interview.role}</div>
+                      <div style={{ color: tdSubColor, fontSize: 11, marginTop: 2 }}>{interview.type} Interview</div>
                     </td>
-                    <td className="py-4 px-4 hidden sm:table-cell">
-                      <span className="text-xs text-gray-400 mr-2 bg-white/5 px-2 py-0.5 rounded border border-white/5">
+                    <td style={{ padding: '14px 12px' }}>
+                      <span style={{ padding: '3px 8px', borderRadius: 6, background: levelBg, border: levelBorder, color: levelColor, fontSize: 11, fontWeight: 600 }}>
                         {interview.level}
                       </span>
-                      <span className="text-xs text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/5">
-                        {interview.difficulty}
-                      </span>
                     </td>
-                    <td className="py-4 px-4">
+                    <td style={{ padding: '14px 12px' }}>
                       {interview.status === 'completed' ? (
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                          Completed
-                        </span>
+                        <span style={{ padding: '3px 10px', borderRadius: 999, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', color: '#22c55e', fontSize: 11, fontWeight: 700 }}>Completed</span>
                       ) : (
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 animate-pulse">
-                          Active
-                        </span>
+                        <span style={{ padding: '3px 10px', borderRadius: 999, background: `${accent}15`, border: `1px solid ${accent}40`, color: accent, fontSize: 11, fontWeight: 700 }}>Active</span>
                       )}
                     </td>
-                    <td className="py-4 px-4 text-center">
-                      {interview.status === 'completed' ? (
-                        <span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold border ${getScoreColor(interview.score)}`}>
-                          {interview.score}%
-                        </span>
-                      ) : (
-                        <span className="text-gray-500 text-xs font-light">N/A</span>
-                      )}
+                    <td style={{ padding: '14px 12px' }}>
+                      {interview.status === 'completed' ? <ScoreBadge score={interview.score} /> : <span style={{ color: mutedColor, fontSize: 12 }}>—</span>}
                     </td>
-                    <td className="py-4 pl-4 text-right">
-                      {interview.status === 'completed' ? (
-                        <span className="text-emerald-400 text-xs font-bold">Completed</span>
-                      ) : (
+                    <td style={{ padding: '14px 12px' }}>
+                      {interview.status !== 'completed' ? (
                         <button
-                          onClick={() => handleResumeInterview(interview)}
-                          className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded bg-neonBlue/15 border border-neonBlue/30 text-neonBlue text-xs hover:bg-neonBlue/20 font-bold transition duration-200"
+                          onClick={() => { localStorage.setItem('currentInterview', JSON.stringify(interview)); window.location.href = '/interview'; }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, background: startBg, border: startBorder, color: startColor, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                         >
-                          <Play className="w-3 h-3 fill-neonBlue" />
-                          <span>Resume</span>
+                          <Play style={{ width: 10, height: 10 }} /> Resume
                         </button>
+                      ) : (
+                        <span style={{ color: '#22c55e', fontSize: 11, fontWeight: 700 }}>✓ Done</span>
                       )}
                     </td>
                   </tr>
@@ -282,7 +340,7 @@ const Dashboard = () => {
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

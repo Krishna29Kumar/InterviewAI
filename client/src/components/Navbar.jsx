@@ -1,254 +1,224 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../redux/slices/authSlice';
-import { clearActiveInterview } from '../redux/slices/interviewSlice';
-import { Menu, X, LogOut, LayoutDashboard, Calendar, BarChart3, Settings, Home } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Zap, Home, LayoutDashboard, Play, BarChart3,
+  User, LogOut, Menu, X, ChevronDown, Code2,
+} from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import { useTheme } from '../context/ThemeContext';
+
+const NAV_LINKS = [
+  { to: '/', label: 'Home', icon: Home, public: true },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, public: false },
+  { to: '/setup', label: 'Practice', icon: Play, public: false },
+  { to: '/dsa-practice/setup', label: 'Company DSA', icon: Code2, public: false },
+  { to: '/analytics', label: 'Analytics', icon: BarChart3, public: false },
+];
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector(s => s.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => { setMobileOpen(false); setProfileOpen(false); }, [location]);
 
   const handleLogout = () => {
     dispatch(logout());
-    dispatch(clearActiveInterview());
     navigate('/');
   };
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (to) => location.pathname === to;
+
+  const S = { fontFamily: 'Inter, system-ui, sans-serif' };
+
+  // Theme-aware colors
+  const navBg = isLight
+    ? (scrolled ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.8)')
+    : (scrolled ? 'rgba(10,10,20,0.92)' : 'rgba(10,10,20,0.6)');
+  const navBorder = isLight
+    ? (scrolled ? '1px solid #e2e8f0' : '1px solid transparent')
+    : (scrolled ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent');
+  const navShadow = isLight
+    ? (scrolled ? '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' : 'none')
+    : (scrolled ? '0 4px 30px rgba(0,0,0,0.3)' : 'none');
+  const logoColor = isLight ? '#1e293b' : 'white';
+  const linkColor = (active) => isLight
+    ? (active ? '#4f46e5' : '#64748b')
+    : (active ? '#00f0ff' : '#6b7280');
+  const linkBg = (active) => isLight
+    ? (active ? '#eef2ff' : 'transparent')
+    : (active ? 'rgba(0,240,255,0.08)' : 'transparent');
+  const linkBorder = (active) => isLight
+    ? (active ? '1px solid #c7d2fe' : '1px solid transparent')
+    : (active ? '1px solid rgba(0,240,255,0.15)' : '1px solid transparent');
+  const linkHoverColor = isLight ? '#1e293b' : 'white';
+  const linkHoverBg = isLight ? '#f1f5f9' : 'rgba(255,255,255,0.04)';
+  const profileBtnBg = isLight ? '#f1f5f9' : 'rgba(255,255,255,0.04)';
+  const profileBtnBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.08)';
+  const profileBtnBorderHover = isLight ? '#cbd5e1' : 'rgba(255,255,255,0.15)';
+  const profileNameColor = isLight ? '#1e293b' : 'white';
+  const dropdownBg = isLight ? '#ffffff' : '#0d0d1a';
+  const dropdownBorder = isLight ? '1px solid #e2e8f0' : '1px solid rgba(255,255,255,0.08)';
+  const dropdownShadow = isLight ? '0 10px 40px rgba(0,0,0,0.12)' : '0 20px 40px rgba(0,0,0,0.5)';
+  const dropdownLinkColor = isLight ? '#64748b' : '#9ca3af';
+  const dropdownLinkHoverBg = isLight ? '#f8fafc' : 'rgba(255,255,255,0.05)';
+  const dropdownLinkHoverColor = isLight ? '#1e293b' : 'white';
+  const signInColor = isLight ? '#64748b' : '#9ca3af';
+  const signInHoverColor = isLight ? '#1e293b' : 'white';
+  const getStartedBg = isLight ? '#4f46e5' : 'linear-gradient(135deg,#00f0ff,#ab22ff)';
+  const getStartedColor = isLight ? '#ffffff' : 'black';
+  const chevronColor = isLight ? '#94a3b8' : '#4b5563';
+  const dividerColor = isLight ? '#e2e8f0' : 'rgba(255,255,255,0.05)';
+  const avatarBg = isLight ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)';
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 glass-panel border-b border-darkBorder">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <>
+      <nav style={{
+        ...S,
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
+        transition: 'all 0.3s ease',
+        background: navBg,
+        backdropFilter: 'blur(20px)',
+        borderBottom: navBorder,
+        boxShadow: navShadow,
+      }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+
           {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white shadow-neon-blue logo">
-                IA
-              </div>
-              <span className="text-xl font-bold tracking-tight text-white hover:text-neonBlue transition duration-300">
-                Interview <span className="text-neonPurple">AI</span>
-              </span>
-            </Link>
+          <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, background: isLight ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap style={{ width: 17, height: 17, color: 'white' }} />
+            </div>
+            <span style={{ fontSize: 17, fontWeight: 900, color: logoColor, letterSpacing: '-0.5px' }}>
+              Interview<span style={{ background: isLight ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span>
+            </span>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {NAV_LINKS.filter(l => l.public || user).map(({ to, label, icon: Icon }) => (
+              <Link key={to} to={to} style={{
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '7px 14px', borderRadius: 10,
+                fontSize: 13, fontWeight: isActive(to) ? 700 : 500,
+                color: linkColor(isActive(to)),
+                textDecoration: 'none', transition: 'all 0.2s',
+                background: linkBg(isActive(to)),
+                border: linkBorder(isActive(to)),
+              }}
+                onMouseEnter={e => { if (!isActive(to)) { e.currentTarget.style.color = linkHoverColor; e.currentTarget.style.background = linkHoverBg; } }}
+                onMouseLeave={e => { if (!isActive(to)) { e.currentTarget.style.color = linkColor(false); e.currentTarget.style.background = 'transparent'; } }}
+              >
+                <Icon style={{ width: 14, height: 14 }} />
+                {label}
+              </Link>
+            ))}
           </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-1">
-            <Link
-              to="/"
-              className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                isActive('/')
-                  ? 'text-neonBlue bg-white/5'
-                  : 'text-gray-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Home className="w-4 h-4" />
-              <span>Home</span>
-            </Link>
-            {user && (
-              <>
-                <Link
-                  to="/dashboard"
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                    isActive('/dashboard')
-                      ? 'text-neonBlue bg-white/5'
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  <span>Dashboard</span>
-                </Link>
-                <Link
-                  to="/setup"
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                    isActive('/setup')
-                      ? 'text-neonBlue bg-white/5'
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <Calendar className="w-4 h-4" />
-                  <span>Practice</span>
-                </Link>
-                <Link
-                  to="/analytics"
-                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition duration-300 ${
-                    isActive('/analytics')
-                      ? 'text-neonBlue bg-white/5'
-                      : 'text-gray-300 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  <span>Analytics</span>
-                </Link>
-              </>
-            )}
-          </div>
-
-          {/* Desktop: Theme Toggle + Auth */}
-          <div className="hidden md:flex items-center space-x-2">
+          {/* Right Side */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <ThemeToggle />
-            <div className="w-px h-6 bg-white/10"></div>
-
             {user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center space-x-2.5 p-1 rounded-full hover:bg-white/5 transition duration-300 outline-none"
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setProfileOpen(v => !v)} style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '6px 12px 6px 6px', borderRadius: 10,
+                  background: profileBtnBg, border: profileBtnBorder,
+                  cursor: 'pointer', transition: 'all 0.2s',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = profileBtnBorderHover}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = isLight ? '#e2e8f0' : 'rgba(255,255,255,0.08)'}
                 >
-                  {user.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={user.name}
-                      className="w-8 h-8 rounded-full object-cover border border-neonBlue/30 shadow-neon-blue"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-neonPurple/20 flex items-center justify-center border border-neonPurple/30 text-neonPurple font-bold">
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-sm font-medium text-gray-200">{user.name}</span>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'white' }}>
+                    {user.name?.[0]?.toUpperCase()}
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: profileNameColor }}>{user.name?.split(' ')[0]}</span>
+                  <ChevronDown style={{ width: 13, height: 13, color: chevronColor, transform: profileOpen ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
                 </button>
 
-                {showDropdown && (
-                  <div className="absolute right-0 mt-2.5 w-48 rounded-lg glass-panel py-1 shadow-glass z-50 border border-darkBorder">
-                    <Link
-                      to="/profile"
-                      onClick={() => setShowDropdown(false)}
-                      className="flex items-center space-x-2 px-4 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition duration-200"
+                <AnimatePresence>
+                  {profileOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                      transition={{ duration: 0.15 }}
+                      style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', minWidth: 180, background: dropdownBg, border: dropdownBorder, borderRadius: 12, padding: 6, zIndex: 100, boxShadow: dropdownShadow }}
                     >
-                      <Settings className="w-4 h-4" />
-                      <span>Profile Settings</span>
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setShowDropdown(false);
-                        handleLogout();
-                      }}
-                      className="flex w-full items-center space-x-2 px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/5 transition duration-200"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                )}
+                      {[
+                        { label: 'Profile Settings', icon: User, to: '/profile' },
+                        { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
+                      ].map(({ label, icon: Icon, to }) => (
+                        <Link key={to} to={to} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, fontSize: 13, color: dropdownLinkColor, textDecoration: 'none', transition: 'all 0.15s' }}
+                          onMouseEnter={e => { e.currentTarget.style.background = dropdownLinkHoverBg; e.currentTarget.style.color = dropdownLinkHoverColor; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = dropdownLinkColor; }}
+                        >
+                          <Icon style={{ width: 14, height: 14 }} />
+                          {label}
+                        </Link>
+                      ))}
+                      <div style={{ height: 1, background: dividerColor, margin: '4px 0' }} />
+                      <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 8, fontSize: 13, color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', width: '100%', transition: 'all 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.08)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <LogOut style={{ width: 14, height: 14 }} />
+                        Sign Out
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  to="/login"
-                  className="text-sm font-medium text-gray-300 hover:text-white transition duration-300 px-3 py-2"
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Link to="/login" style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, color: signInColor, textDecoration: 'none', transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.currentTarget.style.color = signInHoverColor}
+                  onMouseLeave={e => e.currentTarget.style.color = signInColor}
                 >
-                  Log In
+                  Sign In
                 </Link>
-                <Link
-                  to="/register"
-                  className="text-sm font-medium px-4 py-2 rounded-lg bg-neon-gradient text-white shadow-neon-blue bg-neon-gradient-hover hover:scale-105 active:scale-95 transition duration-300"
+                <Link to="/register" style={{ padding: '8px 16px', borderRadius: 10, fontSize: 13, fontWeight: 700, background: getStartedBg, color: getStartedColor, textDecoration: 'none', transition: 'transform 0.2s', boxShadow: isLight ? '0 1px 3px rgba(79,70,229,0.3)' : 'none' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   Get Started
                 </Link>
               </div>
             )}
-          </div>
 
-          {/* Mobile: ThemeToggle + Hamburger */}
-          <div className="flex items-center md:hidden space-x-1">
-            <ThemeToggle />
-            <div className="w-px h-5 bg-white/10"></div>
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/5 transition duration-300"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {/* Mobile menu button */}
+            <button onClick={() => setMobileOpen(v => !v)} style={{ display: 'none', background: 'none', border: 'none', color: isLight ? '#64748b' : '#6b7280', cursor: 'pointer', padding: 4 }} className="mobile-menu-btn">
+              {mobileOpen ? <X style={{ width: 20, height: 20 }} /> : <Menu style={{ width: 20, height: 20 }} />}
             </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      {/* Mobile Menu */}
-      {isOpen && (
-        <div className="md:hidden glass-panel border-t border-darkBorder">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            {user ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                    isActive('/dashboard') ? 'text-neonBlue bg-white/5' : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <LayoutDashboard className="w-5 h-5" />
-                  <span>Dashboard</span>
-                </Link>
-                <Link
-                  to="/setup"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                    isActive('/setup') ? 'text-neonBlue bg-white/5' : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <Calendar className="w-5 h-5" />
-                  <span>Practice</span>
-                </Link>
-                <Link
-                  to="/analytics"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                    isActive('/analytics') ? 'text-neonBlue bg-white/5' : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Analytics</span>
-                </Link>
-                <Link
-                  to="/profile"
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
-                    isActive('/profile') ? 'text-neonBlue bg-white/5' : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  <Settings className="w-5 h-5" />
-                  <span>Profile Settings</span>
-                </Link>
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleLogout();
-                  }}
-                  className="flex w-full items-center space-x-2 px-3 py-2 rounded-md text-base font-medium text-red-400 hover:text-red-300"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span>Sign Out</span>
-                </button>
-              </>
-            ) : (
-              <div className="pt-2 pb-1 border-t border-darkBorder flex flex-col space-y-2 px-3">
-                <Link
-                  to="/login"
-                  onClick={() => setIsOpen(false)}
-                  className="text-center py-2 text-base font-medium text-gray-300 hover:text-white"
-                >
-                  Log In
-                </Link>
-                <Link
-                  to="/register"
-                  onClick={() => setIsOpen(false)}
-                  className="text-center py-2 rounded-lg bg-neon-gradient text-white font-medium"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
+      {/* Spacer */}
+      <div style={{ height: 64 }} />
+
+      <style>{`
+        @media (max-width: 768px) {
+          .mobile-menu-btn { display: block !important; }
+        }
+      `}</style>
+    </>
   );
 };
 

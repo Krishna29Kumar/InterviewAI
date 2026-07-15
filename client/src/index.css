@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Agbalumo&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -40,77 +41,56 @@
   --scrollbar-thumb-hover: #3b3b5c;
 }
 
-/* Light Theme Overrides */
+/* Light Theme Variables (Professional Indigo/Slate Palette) */
 html.light-theme {
-  --color-bg: #f0f4f8;
+  --color-bg: #f8fafc;
   --color-card: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.09);
+  --color-border: #e2e8f0;
 
   --text-primary: #1e293b;
-  --text-secondary: #475569;
+  --text-secondary: #64748b;
   --text-muted: #94a3b8;
 
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --glass-border: rgba(100, 116, 139, 0.14);
+  --glass-bg: #ffffff;
+  --glass-border: #e2e8f0;
 
-  --sphere-1: radial-gradient(circle, rgba(99, 102, 241, 0.10) 0%, transparent 70%);
-  --sphere-2: radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%);
+  --sphere-1: none;
+  --sphere-2: none;
 
-  --grid-color: rgba(0, 0, 0, 0.035);
+  --grid-color: rgba(15, 23, 42, 0.03);
 
-  --scrollbar-track: #e2e8f0;
-  --scrollbar-thumb: #94a3b8;
-  --scrollbar-thumb-hover: #64748b;
+  --scrollbar-track: #f8fafc;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
 }
 
 @layer base {
   body {
     background-color: var(--color-bg);
     color: var(--text-primary);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: 'Outfit', sans-serif;
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
   }
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+html.light-theme * { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
 
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-thumb-hover);
-}
-
-html.light-theme * {
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-}
-
-/* Premium Glassmorphism */
+/* Glass Panel */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border: 1px solid var(--glass-border);
-  transition: background 0.3s ease, border-color 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .glass-panel-hover:hover {
@@ -119,12 +99,18 @@ html.light-theme * {
   box-shadow: 0 8px 30px rgba(0, 240, 255, 0.05);
 }
 
-html.light-theme .glass-panel-hover:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(99, 102, 241, 0.25);
-  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.08);
+html.light-theme .glass-panel {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
+html.light-theme .glass-panel-hover:hover {
+  background: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 10px 25px rgba(79,70,229,0.08);
+  transform: translateY(-2px);
+}
+
+/* Glass Input */
 .glass-input {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--color-border);
@@ -133,13 +119,14 @@ html.light-theme .glass-panel-hover:hover {
 }
 
 html.light-theme .glass-input {
-  background: rgba(255, 255, 255, 0.9);
+  background: #ffffff;
+  border-color: #e2e8f0;
   color: var(--text-primary);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
-html.light-theme .glass-input::placeholder {
-  color: var(--text-muted);
-}
+html.light-theme .glass-input::placeholder { color: #94a3b8; }
 
 .glass-input:focus {
   background: rgba(255, 255, 255, 0.06);
@@ -148,9 +135,9 @@ html.light-theme .glass-input::placeholder {
 }
 
 html.light-theme .glass-input:focus {
-  background: rgba(255, 255, 255, 1);
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  background: #ffffff;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
 }
 
 /* Accent Gradients */
@@ -160,15 +147,10 @@ html.light-theme .glass-input:focus {
   -webkit-text-fill-color: transparent;
 }
 
-.bg-neon-gradient {
-  background: #2b97fb;
-}
+.bg-neon-gradient { background: #2b97fb; }
+.bg-neon-gradient-hover:hover { background: #2b97fb; }
 
-.bg-neon-gradient-hover:hover {
-  background: #2b97fb;
-}
-
-/* Animated Grid Background for Landing */
+/* Grid Background */
 .grid-bg {
   background-size: 40px 40px;
   background-image:
@@ -178,289 +160,170 @@ html.light-theme .glass-input:focus {
 
 /* Orbit / Pulse animations */
 @keyframes pulseGlow {
-
-  0%,
-  100% {
-    opacity: 0.2;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.4;
-    transform: scale(1.15);
-  }
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
 }
 
-.neon-glow-sphere-1 {
-  background: var(--sphere-1);
-  animation: pulseGlow 12s infinite ease-in-out;
-}
-
-.neon-glow-sphere-2 {
-  background: var(--sphere-2);
-  animation: pulseGlow 8s infinite ease-in-out;
-}
+.neon-glow-sphere-1 { background: var(--sphere-1); animation: pulseGlow 12s infinite ease-in-out; }
+.neon-glow-sphere-2 { background: var(--sphere-2); animation: pulseGlow 8s infinite ease-in-out; }
 
 
 /* ══════════════════════════════════════════════════════════════
-   LIGHT THEME — COMPREHENSIVE COMPONENT OVERRIDES
+   LIGHT THEME — TAILWIND UTILITY CLASS OVERRIDES
+   Components now self-manage their colors via useTheme().
+   Only Tailwind utility classes used in Footer/shared components
+   need CSS overrides here.
    ══════════════════════════════════════════════════════════════ */
 
-/* ── Text Colors ─────────────────────────────────────────── */
-html.light-theme .text-white {
-  color: var(--text-primary) !important;
-}
-
-html.light-theme .text-gray-100 {
+/* ── Text Utility Overrides ────────────────────────────────── */
+html.light-theme .text-white:not(button):not(a):not(nav):not(nav *) {
   color: #1e293b !important;
 }
+html.light-theme .text-gray-100 { color: #1e293b !important; }
+html.light-theme .text-gray-200 { color: #1e293b !important; }
+html.light-theme .text-gray-300 { color: #475569 !important; }
+html.light-theme .text-gray-400 { color: #64748b !important; }
+html.light-theme .text-gray-500 { color: #94a3b8 !important; }
 
-html.light-theme .text-gray-200 {
-  color: #334155 !important;
+/* ── Text Gradient Override ─────────────────────────────── */
+html.light-theme .text-neon-gradient {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
 }
 
-html.light-theme .text-gray-300 {
-  color: #475569 !important;
-}
+/* ── Accent Color Overrides ────────────────────────────── */
+html.light-theme .text-neonBlue { color: #4f46e5 !important; }
+html.light-theme .fill-neonBlue { fill: #4f46e5 !important; }
+html.light-theme .text-neonPurple { color: #7c3aed !important; }
 
-html.light-theme .text-gray-400 {
-  color: #64748b !important;
-}
+html.light-theme .border-neonBlue\/20 { border-color: rgba(79, 70, 229, 0.2) !important; }
+html.light-theme .border-neonBlue\/30 { border-color: rgba(79, 70, 229, 0.3) !important; }
+html.light-theme .bg-neonBlue\/10 { background-color: rgba(79, 70, 229, 0.08) !important; }
+html.light-theme .bg-neonBlue\/15 { background-color: rgba(79, 70, 229, 0.12) !important; }
+html.light-theme .hover\:bg-neonBlue\/20:hover { background-color: rgba(79, 70, 229, 0.16) !important; }
 
-html.light-theme .text-gray-500 {
-  color: #94a3b8 !important;
-}
-
-/* ── Background Overrides ────────────────────────────────── */
-html.light-theme .bg-darkBg {
-  background-color: var(--color-bg) !important;
-}
-
+/* ── Background Overrides ───────────────────────────────── */
+html.light-theme .bg-darkBg { background-color: #f8fafc !important; }
 html.light-theme .bg-darkCard {
-  background-color: var(--color-card) !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+  border: 1px solid #e2e8f0 !important;
 }
-
-html.light-theme .bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.04) !important;
-}
-
-html.light-theme .bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.06) !important;
-}
-
-html.light-theme .bg-darkCard\/20 {
-  background-color: rgba(241, 245, 249, 0.7) !important;
-}
+html.light-theme .bg-white\/5 { background-color: rgba(15, 23, 42, 0.03) !important; }
+html.light-theme .bg-white\/10 { background-color: rgba(15, 23, 42, 0.06) !important; }
+html.light-theme .bg-darkCard\/20 { background-color: rgba(255, 255, 255, 0.98) !important; }
 
 /* ── Border Overrides ────────────────────────────────────── */
-html.light-theme .border-darkBorder {
-  border-color: rgba(0, 0, 0, 0.09) !important;
-}
-
-html.light-theme .border-white\/5 {
-  border-color: rgba(0, 0, 0, 0.07) !important;
-}
-
-html.light-theme .border-white\/10 {
-  border-color: rgba(0, 0, 0, 0.10) !important;
-}
+html.light-theme .border-darkBorder { border-color: #e2e8f0 !important; }
+html.light-theme .border-white\/5 { border-color: #e2e8f0 !important; }
+html.light-theme .border-white\/10 { border-color: #e2e8f0 !important; }
 
 /* ── Dividers ─────────────────────────────────────────────── */
-html.light-theme .divide-white\/5> :not([hidden])~ :not([hidden]) {
-  border-color: rgba(0, 0, 0, 0.07) !important;
-}
+html.light-theme .divide-white\/5> :not([hidden])~ :not([hidden]) { border-color: #e2e8f0 !important; }
 
 /* ── Hover States ─────────────────────────────────────────── */
-html.light-theme .hover\:text-white:hover {
-  color: var(--text-primary) !important;
+html.light-theme .hover\:text-white:hover:not(nav *):not(button) { color: #1e293b !important; }
+html.light-theme .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.03) !important; }
+html.light-theme .hover\:bg-white\/10:hover { background-color: rgba(15, 23, 42, 0.06) !important; }
+
+/* ── Buttons: Indigo Professional Style ─────── */
+html.light-theme .bg-neon-gradient {
+  background: #4f46e5 !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(79,70,229,0.3) !important;
+  border-radius: 6px !important;
+}
+html.light-theme .bg-neon-gradient-hover:hover {
+  background: #4338ca !important;
+  box-shadow: 0 4px 12px rgba(79,70,229,0.25) !important;
 }
 
-html.light-theme .hover\:bg-white\/5:hover {
-  background-color: rgba(99, 102, 241, 0.04) !important;
-}
-
-html.light-theme .hover\:bg-white\/10:hover {
-  background-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* ── Buttons: Neon gradient keep white text ─────────────── */
+/* Keep white text ONLY on actual gradient CTA buttons — NOT every
+   button on the site (a plain button with a light/white background
+   would otherwise get invisible white-on-white text) */
 html.light-theme .bg-neon-gradient,
-html.light-theme .bg-neon-gradient-hover {
+html.light-theme .bg-neon-gradient *,
+html.light-theme a.bg-neon-gradient,
+html.light-theme a.bg-neon-gradient *,
+html.light-theme [class*="bg-neon-gradient"] * {
   color: #ffffff !important;
 }
 
-/* ── Progress Bar Track ──────────────────────────────────── */
-html.light-theme .bg-white\/5.rounded-full {
-  background-color: rgba(0, 0, 0, 0.08) !important;
-}
+/* ── Progress Bar ──────────────────────────────────────── */
+html.light-theme .bg-white\/5.rounded-full { background-color: #e2e8f0 !important; }
 
-/* ── Navbar ──────────────────────────────────────────────── */
-html.light-theme nav.glass-panel {
-  background: rgba(255, 255, 255, 0.88) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 1px 16px rgba(0, 0, 0, 0.06) !important;
-}
-
-/* Dropdown panel */
-html.light-theme .absolute.right-0.glass-panel {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(0, 0, 0, 0.10) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10) !important;
-}
-
-/* Vertical divider in navbar */
-html.light-theme .w-px.bg-white\/10 {
-  background-color: rgba(0, 0, 0, 0.10) !important;
-}
-
-/* Mobile menu panel */
-html.light-theme .md\:hidden.glass-panel {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* ── Dashboard Table ─────────────────────────────────────── */
-html.light-theme .border-b.border-white\/5 {
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* Inline level/difficulty chips */
-html.light-theme span.bg-white\/5 {
-  background-color: rgba(0, 0, 0, 0.04) !important;
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  color: #64748b !important;
-}
-
-/* Border divider inside guide card */
-html.light-theme .border-t.border-white\/5 {
-  border-color: rgba(0, 0, 0, 0.08) !important;
-}
-
-/* ── Score badge colors ───────────────────────────────────── */
-html.light-theme .text-emerald-400 {
-  color: #059669 !important;
-}
-
-html.light-theme .text-amber-400 {
-  color: #d97706 !important;
-}
-
-html.light-theme .text-rose-400 {
-  color: #e11d48 !important;
-}
-
-html.light-theme .text-cyan-400 {
-  color: #0891b2 !important;
-}
-
-/* ── Loading Overlay / Modal ─────────────────────────────── */
-html.light-theme .fixed.inset-0 {
-  background-color: rgba(240, 244, 248, 0.85) !important;
-}
-
-html.light-theme .fixed.inset-0 .glass-panel {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-color: rgba(171, 34, 255, 0.20) !important;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12) !important;
-}
-
-html.light-theme .fixed.inset-0 h3 {
-  color: var(--text-primary) !important;
-}
-
-html.light-theme .fixed.inset-0 p {
-  color: var(--text-secondary) !important;
-}
-
-/* ── Toast styling ───────────────────────────────────────── */
-html.light-theme [data-loading="true"] .glass-panel {
-  background: rgba(255, 255, 255, 0.95);
-}
-
-/* ── Footer ──────────────────────────────────────────────── */
-html.light-theme footer.glass-panel {
-  background: linear-gradient(135deg, #ede9fe 0%, #f5f3ff 100%) !important;
-  border-color: rgba(168, 85, 247, 0.2) !important;
-}
-
-/* ── Logo always white ────────────────────────────────────── */
-html.light-theme .logo {
-  color: #ffffff !important;
-}
-
-/* ── Hero Badge light mode ────────────────────────────────── */
-html.light-theme .hero-badge {
-  color: #001b4e !important;
-  border-color: rgba(0, 27, 78, 0.3) !important;
-  background-color: rgba(0, 27, 78, 0.08) !important;
-}
-
-/* ── Light Mode: Feature Cards (Home Page) ────────────────── */
-html.light-theme .feature-card {
-  background: linear-gradient(145deg, #e0e7ff 0%, #ede9fe 40%, #dbeafe 100%) !important;
-  border: 1.5px solid rgba(99, 102, 241, 0.25) !important;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.10), 0 1px 4px rgba(0, 0, 0, 0.05) !important;
-}
-
-html.light-theme .feature-card:hover {
-  background: linear-gradient(145deg, #c7d2fe 0%, #ddd6fe 40%, #bfdbfe 100%) !important;
-  border-color: rgba(99, 102, 241, 0.45) !important;
-  box-shadow: 0 10px 36px rgba(99, 102, 241, 0.18), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* ── Light Mode: Role Cards (Practice/Setup Page) ─────────── */
-html.light-theme .role-card {
-  background: linear-gradient(145deg, #e0e7ff 0%, #dbeafe 100%) !important;
-  border: 1.5px solid rgba(99, 102, 241, 0.22) !important;
-  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
-}
-
-html.light-theme .role-card:hover {
-  background: linear-gradient(145deg, #c7d2fe 0%, #bfdbfe 100%) !important;
-  border-color: rgba(59, 130, 246, 0.45) !important;
-  box-shadow: 0 8px 28px rgba(59, 130, 246, 0.15), 0 3px 8px rgba(0, 0, 0, 0.06) !important;
-}
-
-/* ── Light Mode: Neon Blue (Cyan) Visibility Overrides ────── */
-html.light-theme .text-neonBlue {
-  color: #2563eb !important;
-}
-
-html.light-theme .fill-neonBlue {
-  fill: #2563eb !important;
-}
-
-html.light-theme .border-neonBlue\/20 {
-  border-color: rgba(37, 99, 235, 0.25) !important;
-}
-
-html.light-theme .border-neonBlue\/30 {
-  border-color: rgba(37, 99, 235, 0.35) !important;
-}
-
-html.light-theme .bg-neonBlue\/10 {
-  background-color: rgba(37, 99, 235, 0.08) !important;
-}
-
-html.light-theme .bg-neonBlue\/15 {
-  background-color: rgba(37, 99, 235, 0.12) !important;
-}
-
-html.light-theme .hover\:bg-neonBlue\/20:hover {
-  background-color: rgba(37, 99, 235, 0.18) !important;
-}
-
-html.light-theme nav .text-xl.font-bold {
+/* ── Input Override ────────────────────────────────────── */
+html.light-theme input {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+  border-radius: 6px !important;
+}
+html.light-theme input::placeholder { color: #94a3b8 !important; }
+html.light-theme input:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15) !important;
+  outline: none !important;
 }
 
-html.light-theme nav .text-xl.font-bold:hover {
-  color: #4338ca !important;
+/* ── Footer (uses Tailwind classes) ────────────────────── */
+html.light-theme footer.glass-panel {
+  background: #ffffff !important;
+  border-top: 1px solid #e2e8f0 !important;
+  box-shadow: none !important;
 }
 
-/* ── Light Mode: Recent Sessions Panel (Dashboard) ────────── */
+/* ── Modals & Overlays ────────────────────────────────── */
+html.light-theme .fixed.inset-0 {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+  backdrop-filter: blur(8px) !important;
+}
+html.light-theme .fixed.inset-0 .glass-panel {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15) !important;
+}
+
+/* ── Hero Badge ────────────────────────────────────────── */
+html.light-theme .hero-badge {
+  color: #4f46e5 !important;
+  border-color: rgba(79, 70, 229, 0.25) !important;
+  background-color: rgba(79, 70, 229, 0.08) !important;
+}
+
+/* ── Feature & Role Cards (Tailwind class) ─────────────── */
+html.light-theme .feature-card,
+html.light-theme .role-card,
 html.light-theme .sessions-log-panel {
-  background: linear-gradient(145deg, #e0e7ff 0%, #ede9fe 40%, #dbeafe 100%) !important;
-  border: 1.5px solid rgba(99, 102, 241, 0.25) !important;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
 }
+html.light-theme .feature-card:hover,
+html.light-theme .role-card:hover {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 10px 25px rgba(79,70,229,0.08) !important;
+  transform: translateY(-2px);
+}
+
+/* ── Additional Accent Overrides (Purple + missed Blue variants) ─── */
+html.light-theme .text-neonPurple { color: #7c3aed !important; }
+html.light-theme .border-neonPurple\/20 { border-color: rgba(124, 58, 237, 0.2) !important; }
+html.light-theme .border-neonPurple\/30 { border-color: rgba(124, 58, 237, 0.3) !important; }
+html.light-theme .border-neonPurple\/40 { border-color: rgba(124, 58, 237, 0.35) !important; }
+html.light-theme .bg-neonPurple\/5 { background-color: rgba(124, 58, 237, 0.05) !important; }
+html.light-theme .bg-neonPurple\/10 { background-color: rgba(124, 58, 237, 0.08) !important; }
+html.light-theme .hover\:bg-neonPurple\/5:hover { background-color: rgba(124, 58, 237, 0.05) !important; }
+html.light-theme .hover\:border-neonPurple\/40:hover { border-color: rgba(124, 58, 237, 0.4) !important; }
+
+html.light-theme .border-neonBlue\/40 { border-color: rgba(79, 70, 229, 0.4) !important; }
+html.light-theme .hover\:border-neonBlue\/40:hover { border-color: rgba(79, 70, 229, 0.4) !important; }
+html.light-theme .hover\:bg-neonBlue\/5:hover { background-color: rgba(79, 70, 229, 0.05) !important; }
+html.light-theme .bg-white\/3 { background-color: rgba(15, 23, 42, 0.02) !important; }
+
+/* group-hover variants used on role/feature cards */
+html.light-theme .group:hover .group-hover\:bg-neonBlue\/20 { background-color: rgba(79, 70, 229, 0.16) !important; }
+html.light-theme .group:hover .group-hover\:bg-neonPurple\/20 { background-color: rgba(124, 58, 237, 0.16) !important; }

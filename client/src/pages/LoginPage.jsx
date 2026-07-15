@@ -1,147 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { login, clearAuthError } from '../redux/slices/authSlice';
+import { login } from '../redux/slices/authSlice';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, Zap, Eye, EyeOff, ArrowRight } from 'lucide-react';
+
+const fadeUp = (delay = 0) => ({
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay } },
+});
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state) => state.auth);
+  const { loading, user } = useSelector(s => s.auth);
 
-  useEffect(() => {
-    // Populate remembered email if present
-    const savedEmail = localStorage.getItem('rememberedEmail');
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
-    }
-
-    // Clear any residual errors on mount
-    dispatch(clearAuthError());
-  }, [dispatch]);
+  useEffect(() => { if (user) navigate('/dashboard'); }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
-      return toast.error('Please fill in all fields');
-    }
-
-    const resultAction = await dispatch(login({ email, password }));
-
-    if (login.fulfilled.match(resultAction)) {
-      toast.success('Logged in successfully!');
-      
-      if (rememberMe) {
-        localStorage.setItem('rememberedEmail', email);
-      } else {
-        localStorage.removeItem('rememberedEmail');
-      }
-
-      navigate('/');
+    if (!email || !password) return toast.error('Fill in all fields');
+    const result = await dispatch(login({ email, password }));
+    if (login.fulfilled.match(result)) {
+      toast.success('Welcome back!');
+      navigate('/dashboard');
     } else {
-      toast.error(resultAction.payload || 'Invalid email or password');
+      toast.error(result.payload || 'Login failed');
     }
   };
 
+  const S = { fontFamily: 'Inter, system-ui, sans-serif' };
+  const inputWrap = { position: 'relative' };
+  const inputStyle = {
+    width: '100%', padding: '12px 16px 12px 44px',
+    borderRadius: 10, background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(255,255,255,0.08)', color: 'white',
+    fontSize: 13, outline: 'none', transition: 'border-color 0.2s', boxSizing: 'border-box',
+  };
+  const iconStyle = { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#374151', pointerEvents: 'none' };
+  const labelStyle = { fontSize: 11, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700, marginBottom: 6, display: 'block' };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="glass-panel p-8 rounded-2xl border border-darkBorder shadow-glass"
-    >
-      <h2 className="text-2xl font-bold text-center text-white">Welcome Back</h2>
-      <p className="text-gray-400 text-xs text-center mt-1">Sign in to resume practicing</p>
+    <div style={{ ...S, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, position: 'relative' }}>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        {/* Email Field */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-            Email Address
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-lg text-sm text-gray-200 glass-input"
-            placeholder="name@company.com"
-            required
-          />
-        </div>
+      {/* Background orbs */}
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0 }}>
+        <div style={{ position: 'absolute', top: '20%', left: '30%', width: 400, height: 400, background: 'radial-gradient(circle,rgba(0,240,255,0.06) 0%,transparent 70%)', borderRadius: '50%', filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: '20%', right: '30%', width: 300, height: 300, background: 'radial-gradient(circle,rgba(171,34,255,0.06) 0%,transparent 70%)', borderRadius: '50%', filter: 'blur(40px)' }} />
+      </div>
 
-        {/* Password Field */}
-        <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1.5 uppercase tracking-wide">
-            Password
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg text-sm text-gray-200 glass-input pr-10"
-              placeholder="••••••••"
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+      <div style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
+
+        {/* Logo */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp(0)} style={{ textAlign: 'center', marginBottom: 32 }}>
+          <Link to="/" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg,#00f0ff,#ab22ff)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Zap style={{ width: 20, height: 20, color: 'black' }} />
+            </div>
+            <span style={{ fontSize: 20, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>Interview<span style={{ background: 'linear-gradient(135deg,#00f0ff,#ab22ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span></span>
+          </Link>
+        </motion.div>
+
+        {/* Card */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp(0.1)} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 20, padding: '36px 32px' }}>
+
+          <div style={{ marginBottom: 28 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: 'white', letterSpacing: '-0.5px', marginBottom: 6 }}>Welcome back</h1>
+            <p style={{ fontSize: 13, color: '#4b5563' }}>Sign in to continue your interview practice</p>
           </div>
-        </div>
 
-        {/* Remember Me */}
-        <div className="flex items-center justify-between text-xs text-gray-400">
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="rounded border-gray-600 bg-darkCard text-neonBlue focus:ring-neonBlue/20 w-4 h-4"
-            />
-            <span>Remember Me</span>
-          </label>
-          <a href="#" className="hover:text-neonBlue transition duration-200">
-            Forgot Password?
-          </a>
-        </div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div>
+              <label style={labelStyle}>Email Address</label>
+              <div style={inputWrap}>
+                <Mail style={iconStyle} />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" style={inputStyle} required
+                  onFocus={e => e.target.style.borderColor = 'rgba(0,240,255,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                />
+              </div>
+            </div>
 
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 rounded-lg bg-neon-gradient text-white font-semibold text-sm shadow-neon-blue bg-neon-gradient-hover hover:scale-[1.02] active:scale-[0.98] transition duration-200 flex items-center justify-center space-x-2"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Signing In...</span>
-            </>
-          ) : (
-            <span>Sign In</span>
-          )}
-        </button>
-      </form>
+            <div>
+              <label style={labelStyle}>Password</label>
+              <div style={{ ...inputWrap }}>
+                <Lock style={iconStyle} />
+                <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" style={{ ...inputStyle, paddingRight: 44 }} required
+                  onFocus={e => e.target.style.borderColor = 'rgba(0,240,255,0.4)'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+                />
+                <button type="button" onClick={() => setShowPw(v => !v)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#374151', padding: 0 }}>
+                  {showPw ? <EyeOff style={{ width: 15, height: 15 }} /> : <Eye style={{ width: 15, height: 15 }} />}
+                </button>
+              </div>
+            </div>
 
-      {/* Register Link */}
-      <p className="mt-6 text-center text-xs text-gray-400">
-        Don't have an account?{' '}
-        <Link to="/register" className="text-neonBlue hover:underline font-semibold">
-          Sign Up
-        </Link>
-      </p>
-    </motion.div>
+            <button type="submit" disabled={loading} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '13px', borderRadius: 12, background: loading ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)', color: loading ? '#6b7280' : 'black', fontWeight: 800, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', border: 'none', transition: 'transform 0.2s', marginTop: 4 }}
+              onMouseEnter={e => !loading && (e.currentTarget.style.transform = 'scale(1.02)')}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              {loading ? <><Loader2 style={{ width: 16, height: 16, animation: 'spin 0.8s linear infinite' }} /> Signing in...</> : <>Sign In <ArrowRight style={{ width: 15, height: 15 }} /></>}
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </button>
+          </form>
+
+          <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', fontSize: 13, color: '#4b5563' }}>
+            Don't have an account?{' '}
+            <Link to="/register" style={{ color: '#00f0ff', fontWeight: 700, textDecoration: 'none' }}>Create one free</Link>
+          </div>
+        </motion.div>
+      </div>
+    </div>
   );
 };
 

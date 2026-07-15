@@ -1,3 +1,42 @@
+/**
+ * FILE: client/src/hooks/useSpeechToText.js
+ * ================================================================
+ * YE FILE KYA HAI: Voice-se-answer-dena feature ka poora logic —
+ * microphone record karna, live text dikhana, aur audio ko backend
+ * bhejna.
+ *
+ * DO-LAYER TRANSCRIPTION STRATEGY (important design decision):
+ *   Layer 1 (LIVE, instant): Browser ka built-in `SpeechRecognition`
+ *      API real-time mein bolte-bolte text dikhata hai — koi network
+ *      call nahi, turant response.
+ *   Layer 2 (BACKEND, jab recording ruke): Recorded audio backend
+ *      `/interview/transcribe` ko bheja jaata hai (Whisper ke liye
+ *      design kiya gaya tha).
+ *
+ *   VARTAMAN STATUS: Backend ka Whisper service abhi jaan-boojh kar
+ *   DISABLED hai (dekho server/services/aiService.js — transcribeAudio()
+ *   hamesha error throw karta hai). Isliye har baar backend call FAIL
+ *   hoti hai, aur catch block automatically Layer 1 (jo already live
+ *   record ho chuka tha) ko final answer maan leta hai. Matlab feature
+ *   poori tarah kaam karta hai, sirf "backend AI transcription" ki
+ *   jagah "browser's own speech recognition" use ho raha hai — bina
+ *   kisi paid API ke.
+ *
+ * WAV ENCODING: Browser audio ko WebM format mein record karta hai,
+ * lekin standard tarike se sunne/save karne ke liye ise WAV (raw PCM)
+ * mein convert karte hain (neeche diye gaye helper functions se) —
+ * ye pure JavaScript mein manual WAV file banate hain, kisi library
+ * ki zaroorat nahi.
+ *
+ * CHROME BUG WORKAROUND: Chrome mein ek known issue hai jahan ek
+ * SpeechRecognition instance 'network' error ke baad hamesha ke liye
+ * kharab ho jaata hai. Isliye `createRecognitionInstance()` HAR BAAR
+ * recording start hone par ek FRESH instance banata hai.
+ *
+ * PROJECT MEIN ROLE: InterviewSession.jsx "Answer by Voice" button
+ * is hook ko use karta hai.
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import api from '../services/api';
 
@@ -12,12 +51,11 @@ export const useSpeechToText = () => {
   const audioChunksRef = useRef([]);
   const recognitionRef = useRef(null);
   const browserTranscriptRef = useRef('');
-
   const latestTranscriptRef = useRef('');
 
-  // Creates a FRESH SpeechRecognition instance each time.
-  // Fixes Chrome bug where a recognition instance becomes permanently
-  // unusable after a 'network' error.
+  // Har recording session ke liye NAYI SpeechRecognition instance banao.
+  // Chrome ke us bug se bachne ke liye jisme purani instance 'network'
+  // error ke baad permanently unusable ho jaati hai.
   const createRecognitionInstance = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return null;
@@ -40,8 +78,8 @@ export const useSpeechToText = () => {
       }
 
       const currentText = (finalTranscript + interimTranscript).trim();
-      setTranscript(currentText);
-      latestTranscriptRef.current = currentText;
+      setTranscript(currentText); // Live UI update — bolte hi text dikhta hai
+      latestTranscriptRef.current = currentText; // Ref mein bhi rakho (fallback ke liye baad mein chahiye)
     };
 
     recognition.onerror = (event) => {
@@ -57,7 +95,7 @@ export const useSpeechToText = () => {
   };
 
   useEffect(() => {
-    // Stop speaking/listening when component unmounts
+    // Component unmount hone pe recognition band kar do (memory leak se bachne ke liye)
     return () => {
       if (recognitionRef.current) {
         try {
@@ -78,10 +116,10 @@ export const useSpeechToText = () => {
       latestTranscriptRef.current = '';
       audioChunksRef.current = [];
 
-      // Request microphone access
+      // Microphone permission maango
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-      // Initialize MediaRecorder
+      // Audio recording ke liye MediaRecorder setup
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
@@ -93,23 +131,20 @@ export const useSpeechToText = () => {
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-
-        // Stop all audio tracks to release microphone
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => track.stop()); // Mic release karo
 
         setIsTranscribing(true);
         try {
-          // Decode compressed browser audio to PCM AudioBuffer
+          // Compressed WebM ko raw PCM AudioBuffer mein decode karo
           const audioContext = new (window.AudioContext || window.webkitAudioContext)();
           const arrayBuffer = await audioBlob.arrayBuffer();
           const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-          // Encode AudioBuffer to standard WAV PCM Blob
+          // Standard WAV format mein convert karo (playback/compatibility ke liye)
           const wavBlob = bufferToWav(audioBuffer);
           const url = URL.createObjectURL(wavBlob);
           setAudioUrl(url);
 
-          // Perform Transcription using the WAV blob
           await transcribeAudioWithWhisper(wavBlob);
         } catch (convErr) {
           console.warn('WAV conversion failed, using WebM fallback:', convErr);
@@ -121,12 +156,10 @@ export const useSpeechToText = () => {
         }
       };
 
-      // Start recording
       mediaRecorder.start();
       setIsRecording(true);
 
-      // Start browser recognition for real-time text feedback (if supported)
-      // Fresh instance every time to avoid stale/dead recognition objects.
+      // Real-time text feedback ke liye browser recognition bhi saath mein chalao
       recognitionRef.current = createRecognitionInstance();
       if (recognitionRef.current) {
         try {
@@ -156,23 +189,24 @@ export const useSpeechToText = () => {
     }
   };
 
+  // Backend ko audio bhejo (Whisper ke liye tha) — abhi ye HAMESHA FAIL
+  // hoga (Whisper disabled hai), jisse catch block mein browser ka
+  // already-live transcript final answer ban jaata hai
   const transcribeAudioWithWhisper = async (audioBlob) => {
     setIsTranscribing(true);
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'response.wav');
 
-      // POST to backend Whisper endpoint
       const response = await api.post('/interview/transcribe', formData);
 
       if (response.data.transcript) {
-        // Update with Whisper transcript
         setTranscript(response.data.transcript);
         latestTranscriptRef.current = response.data.transcript;
       }
     } catch (err) {
       console.warn('Whisper API failed/not configured. Falling back to browser speech recognition.');
-      // If Whisper failed, we keep the live browser transcript
+      // Whisper fail hua — jo bhi browser ne live sun ke transcribe kiya tha, wahi use karo
       if (latestTranscriptRef.current) {
         setTranscript(latestTranscriptRef.current);
       } else {
@@ -198,13 +232,15 @@ export const useSpeechToText = () => {
     startRecording,
     stopRecording,
     resetTranscript,
-    setTranscript // allow manual editing of transcript
+    setTranscript // Manual editing allow karo (user apna transcript type karke fix kar sake)
   };
 };
 
-// ─────────────────────────────────────────────────
-// CLIENT SIDE WAV ENCODING UTILITIES (Pure JS)
-// ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// WAV ENCODING HELPERS — Pure JavaScript mein audio ko WAV format
+// mein convert karne ke liye (koi external library use nahi ki)
+// ═══════════════════════════════════════════════════════════════
+
 const bufferToWav = (buffer) => {
   const numOfChan = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;
@@ -221,6 +257,7 @@ const bufferToWav = (buffer) => {
   return writeWavFile(result, numOfChan, sampleRate, format, bitDepth);
 };
 
+// Stereo audio ke do channels ko ek stream mein mix karo
 const interleave = (inputL, inputR) => {
   const length = inputL.length + inputR.length;
   const result = new Float32Array(length);
@@ -235,6 +272,7 @@ const interleave = (inputL, inputR) => {
   return result;
 };
 
+// WAV file ka binary header + data manually likhta hai (RIFF/WAVE format spec ke hisaab se)
 const writeWavFile = (samples, numOfChan, sampleRate, format, bitDepth) => {
   const blockAlign = numOfChan * (bitDepth / 8);
   const byteRate = sampleRate * blockAlign;
@@ -260,6 +298,7 @@ const writeWavFile = (samples, numOfChan, sampleRate, format, bitDepth) => {
   return new Blob([view], { type: 'audio/wav' });
 };
 
+// Float32 audio samples ko 16-bit PCM integers mein convert karo
 const floatTo16BitPCM = (output, offset, input) => {
   for (let i = 0; i < input.length; i++, offset += 2) {
     let s = Math.max(-1, Math.min(1, input[i]));

@@ -1,7 +1,38 @@
+/**
+ * FILE: client/src/redux/slices/authSlice.js
+ * ================================================================
+ * YE FILE KYA HAI: Login/Register/Session ka poora frontend state
+ * management — "auth" slice of the Redux store.
+ *
+ * TEEN ASYNC ACTIONS (createAsyncThunk):
+ *   1. login()            → Email/password se login karta hai,
+ *                           token + user localStorage mein save karta hai
+ *   2. register()          → Naya account banata hai, turant login bhi
+ *                           kar deta hai (backend register ke saath token bhejta hai)
+ *   3. checkAuthSession()  → Page refresh hone pe ye chalta hai (App.jsx
+ *                           se) — dekhta hai ki saved token abhi bhi
+ *                           valid hai ya nahi. Agar expired ho gaya,
+ *                           localStorage clear karke user ko logged-out
+ *                           kar deta hai.
+ *
+ * LOCALSTORAGE PERSISTENCE: Token aur user dono localStorage mein save
+ * hote hain — isliye browser band karke dobara khole tab bhi login
+ * yaad rehta hai (jab tak token expire na ho).
+ *
+ * SYNC REDUCERS: logout, updateProfileSuccess, updateAvatarSuccess,
+ * clearAuthError — ye instant (non-API) state changes hain, jaise
+ * profile update hone ke baad Redux state ko turant refresh karna
+ * (bina dobara /auth/me call kiye).
+ *
+ * PROJECT MEIN ROLE: LoginPage.jsx, RegisterPage.jsx, ProfilePage.jsx,
+ * aur App.jsx (session check ke liye) sab is slice ko use karte hain.
+ * Navbar.jsx bhi `user` state se decide karta hai login/logout UI dikhana.
+ */
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
-// Retrieve cached user/token from localStorage
+// Page load hote hi localStorage se pehle se saved session (agar hai) uthao
 const token = localStorage.getItem('token') || null;
 let user = null;
 try {
@@ -18,7 +49,7 @@ const initialState = {
   error: null,
 };
 
-// Async login action
+// Login — backend se token milta hai, localStorage mein persist karo
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
     const response = await api.post('/auth/login', credentials);
@@ -32,7 +63,7 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
   }
 });
 
-// Async registration action
+// Register — naya account, backend turant login token bhi de deta hai
 export const register = createAsyncThunk('auth/register', async (details, { rejectWithValue }) => {
   try {
     const response = await api.post('/auth/register', details);
@@ -46,7 +77,8 @@ export const register = createAsyncThunk('auth/register', async (details, { reje
   }
 });
 
-// Async getMe (Refresh Session)
+// App load/refresh hone pe session verify karo — token expire ho gaya
+// ho toh localStorage clean karke logout state mein bhej do
 export const checkAuthSession = createAsyncThunk('auth/checkSession', async (_, { rejectWithValue }) => {
   try {
     const response = await api.get('/auth/me');
@@ -63,6 +95,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    // Manual logout — user khud "Sign Out" dabaye
     logout(state) {
       state.user = null;
       state.token = null;
@@ -71,10 +104,12 @@ const authSlice = createSlice({
       localStorage.removeItem('token');
       localStorage.removeItem('user');
     },
+    // ProfilePage se naam/email update hone ke baad Redux state turant refresh
     updateProfileSuccess(state, action) {
       state.user = action.payload;
       localStorage.setItem('user', JSON.stringify(action.payload));
     },
+    // Avatar upload hone ke baad sirf avatar field update karo
     updateAvatarSuccess(state, action) {
       if (state.user) {
         state.user.avatar = action.payload;
@@ -87,7 +122,7 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login
+      // Login lifecycle
       .addCase(login.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -101,7 +136,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Register
+      // Register lifecycle
       .addCase(register.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -115,7 +150,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Check auth session
+      // Session check lifecycle (silent — koi loading spinner nahi dikhate isके liye)
       .addCase(checkAuthSession.fulfilled, (state, action) => {
         state.user = action.payload;
       })

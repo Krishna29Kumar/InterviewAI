@@ -111,7 +111,10 @@ export default function TerminationModal({ violation, onConfirm }) {
                     <div style={{ fontSize: '13px', color: '#fca5a5' }}>
                         {violation.type === 'keyboard_paste' ? '⌨️ Keyboard Paste (Ctrl/Cmd+V)' :
                             violation.type === 'right_click' ? '🖱️ Right Click on Answer Field' :
-                                '📋 Copy-Paste Attempt'}
+                                violation.type === 'tab_switch' ? '🚨 Tab Switch Detected' :
+                                    violation.type === 'fullscreen_exit' ? '🖥️ Fullscreen Mode Exited' :
+                                    violation.type === 'camera_off' ? '📷 Camera Turned Off' :
+                                        '📋 Copy-Paste Attempt'}
                     </div>
                     <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
                         {new Date(violation.timestamp).toLocaleTimeString()}

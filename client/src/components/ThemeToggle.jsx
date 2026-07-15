@@ -9,6 +9,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       className="relative w-9 h-9 flex items-center justify-center rounded-lg transition-all duration-300 hover:bg-white/5"
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      style={theme === 'light' ? { background: '#f1f5f9' } : {}}
     >
       {/* Sun icon - visible in dark mode, rotates in */}
       <Sun
@@ -26,7 +27,7 @@ export default function ThemeToggle() {
             ? 'opacity-100 rotate-0 scale-100'
             : 'opacity-0 -rotate-90 scale-75'
         }`}
-        style={{ color: '#ab22ff', width: '18px', height: '18px' }}
+        style={{ color: '#4f46e5', width: '18px', height: '18px' }}
       />
     </button>
   );
