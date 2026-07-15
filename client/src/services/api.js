@@ -1,13 +1,15 @@
 import axios from 'axios';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE ? `${API_BASE}/api` : '/api',
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
   },
 });
 
-// Request interceptor to automatically attach the bearer JWT
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,15 +23,12 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to intercept session expires
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear storage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Optionally redirect to login if we aren't already there
       if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register') && window.location.pathname !== '/') {
         window.location.href = '/login';
       }
