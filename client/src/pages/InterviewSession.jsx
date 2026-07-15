@@ -56,6 +56,14 @@ const InterviewSession = () => {
     setCamEnabled(false);
   };
   useEffect(() => { if (currentInterview) startWebcam(); return () => stopWebcam(); }, [currentInterview?._id]);
+
+  // Camera off DURING active session — strict: instant terminate + 0 score
+  useEffect(() => {
+    if (currentInterview && camEnabled && !isCameraOn && !violation) {
+      setViolation({ type: 'camera_off', timestamp: new Date().toISOString() });
+      stopWebcam();
+    }
+  }, [isCameraOn, currentInterview, violation, camEnabled]);
   useEffect(() => { if (tabSwitchCount > 0) toast.error('Tab switch detected! (' + tabSwitchCount + 'x)'); }, [tabSwitchCount]);
   useEffect(() => { if (!currentInterview) navigate('/setup'); }, [currentInterview, navigate]);
   useEffect(() => {

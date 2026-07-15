@@ -52,6 +52,14 @@ const CompanyDSASession = () => {
     onViolation: (v) => { setViolation(v); stopWebcam(); },
   });
 
+  // Violation ho jaaye toh browser ko fullscreen se bhi nikal do —
+  // warna user ko manually Esc dabaana padta tha, lagta tha kuch atka hai
+  useEffect(() => {
+    if (violation && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, [violation]);
+
   const { isFullscreen, showWarning, enterFullscreen } = useFullscreenEnforcer({
     isActive: sessionStarted && !violation,
     graceMs: 5000,
