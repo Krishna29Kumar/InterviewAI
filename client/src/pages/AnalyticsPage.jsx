@@ -8,6 +8,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
 import { BarChart3, TrendingUp, HelpCircle, Award, CheckCircle, Target, Zap, ArrowRight } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 const fadeUp = (delay = 0) => ({
   hidden: { opacity: 0, y: 20 },
@@ -54,6 +55,8 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 const AnalyticsPage = () => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [feedbackHistory, setFeedbackHistory] = useState([]);
@@ -101,7 +104,7 @@ const AnalyticsPage = () => {
   if (interviews.length === 0) return (
     <div style={{ ...S, textAlign: 'center', padding: '80px 20px', maxWidth: 420, margin: '0 auto' }}>
       <HelpCircle style={{ width: 48, height: 48, color: '#374151', margin: '0 auto 16px', opacity: 0.5 }} />
-      <h2 style={{ fontSize: 22, fontWeight: 800, color: 'white', marginBottom: 8 }}>No Analytics Yet</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: isLight ? '#1e293b' : 'white', marginBottom: 8 }}>No Analytics Yet</h2>
       <p style={{ color: '#4b5563', fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>
         Complete at least one interview session to see your performance analytics.
       </p>
@@ -138,7 +141,7 @@ const AnalyticsPage = () => {
             <BarChart3 style={{ width: 20, height: 20, color: '#00f0ff' }} />
           </div>
           <div>
-            <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>Performance Analytics</h1>
+            <h1 style={{ fontSize: 'clamp(20px,3vw,28px)', fontWeight: 900, color: isLight ? '#1e293b' : 'white', letterSpacing: '-0.5px' }}>Performance Analytics</h1>
             <p style={{ color: '#4b5563', fontSize: 12, marginTop: 2 }}>Visualize your interview preparation history and skill development</p>
           </div>
         </div>
@@ -158,7 +161,7 @@ const AnalyticsPage = () => {
             </div>
             <div>
               <div style={{ fontSize: 10, color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 3, fontWeight: 600 }}>{label}</div>
-              <div style={{ fontSize: 20, fontWeight: 900, color: 'white', lineHeight: 1 }}>{value}</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: isLight ? '#1e293b' : 'white', lineHeight: 1 }}>{value}</div>
             </div>
           </motion.div>
         ))}
@@ -171,7 +174,7 @@ const AnalyticsPage = () => {
         <motion.div initial="hidden" animate="visible" variants={fadeUp(0.2)} style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Score Progression</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: isLight ? '#1e293b' : 'white' }}>Score Progression</div>
               <div style={{ fontSize: 11, color: '#4b5563', marginTop: 2 }}>Overall score over time</div>
             </div>
             <TrendingUp style={{ width: 16, height: 16, color: '#00f0ff' }} />
@@ -197,7 +200,7 @@ const AnalyticsPage = () => {
 
         {/* Pie Chart */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp(0.25)} style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'white', marginBottom: 20 }}>Session Breakdown</div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: isLight ? '#1e293b' : 'white', marginBottom: 20 }}>Session Breakdown</div>
           <div style={{ flex: 1, minHeight: 180 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -225,7 +228,7 @@ const AnalyticsPage = () => {
         {/* Granular Bars */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp(0.3)} style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>Skill Breakdown</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: isLight ? '#1e293b' : 'white' }}>Skill Breakdown</div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {barData.map((_, i) => (
                 <button key={i} onClick={() => setActiveIdx(i)} style={{ padding: '3px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', background: activeIdx === i ? 'rgba(171,34,255,0.2)' : 'rgba(255,255,255,0.05)', border: activeIdx === i ? '1px solid rgba(171,34,255,0.4)' : '1px solid rgba(255,255,255,0.08)', color: activeIdx === i ? '#ab22ff' : '#6b7280' }}>
@@ -249,7 +252,7 @@ const AnalyticsPage = () => {
         <motion.div initial="hidden" animate="visible" variants={fadeUp(0.35)} style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
             <Award style={{ width: 16, height: 16, color: '#22c55e' }} />
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>AI Insights</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: isLight ? '#1e293b' : 'white' }}>AI Insights</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {[
@@ -274,7 +277,7 @@ const AnalyticsPage = () => {
               <div key={i} style={{ padding: '14px', borderRadius: 10, background: `${color}08`, border: `1px solid ${color}18`, display: 'flex', gap: 10 }}>
                 <CheckCircle style={{ width: 16, height: 16, color, flexShrink: 0, marginTop: 1 }} />
                 <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'white', marginBottom: 4 }}>{title}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: isLight ? '#1e293b' : 'white', marginBottom: 4 }}>{title}</div>
                   <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6 }}>{text}</div>
                 </div>
               </div>
