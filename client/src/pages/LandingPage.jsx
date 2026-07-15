@@ -316,7 +316,7 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.h1 variants={fadeUp(0.1)} style={{ fontSize: 'clamp(42px,7vw,82px)', fontWeight: 900, lineHeight: 1.05, color: headingColor, marginBottom: 24, letterSpacing: '-2px' }}>
-            Ace Your Next<br /><TypingText words={['Interview.', 'Internship.', 'Dream Job.', 'Tech Role.']} isLight={isLight} />
+            Ace Your Next<br /><TypingText key={theme} words={['Interview.', 'Internship.', 'Dream Job.', 'Tech Role.']} isLight={isLight} />
           </motion.h1>
 
           <motion.p variants={fadeUp(0.2)} style={{ fontSize: 'clamp(15px,2vw,18px)', color: bodyColor, lineHeight: 1.8, maxWidth: 560, margin: '0 auto 40px' }}>

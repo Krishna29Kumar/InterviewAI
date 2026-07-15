@@ -106,7 +106,7 @@ const Navbar = () => {
               <Zap style={{ width: 17, height: 17, color: 'white' }} />
             </div>
             <span style={{ fontSize: 17, fontWeight: 900, color: logoColor, letterSpacing: '-0.5px' }}>
-              Interview<span style={{ background: isLight ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span>
+              Interview<span key={theme} style={{ background: isLight ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : 'linear-gradient(135deg,#00f0ff,#ab22ff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI</span>
             </span>
           </Link>
 
