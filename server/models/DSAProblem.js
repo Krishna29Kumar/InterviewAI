@@ -10,7 +10,6 @@
  * fetch karke ye collection populate karta hai. Description field
  * jaan-boojh kar khaali/paraphrase rakha jaata hai — LeetCode ke
  * copyrighted problem statements ko word-for-word copy nahi karte.
- *
  * DESIGN NOTE: `companies` ek array hai (single string nahi) kyunki
  * ek hi question (jaise "Two Sum") kai companies pooch sakti hain —
  * isse duplicate documents banane ki zaroorat nahi padti.

@@ -18,64 +18,64 @@ import axios from 'axios';
 // Anomaly ke human-readable labels
 // ─────────────────────────────────────────────────
 export const ANOMALY_LABELS = {
-  no_person_detected:      'Camera mein koi nahi dikh raha',
-  multiple_people:         '2 ya zyada log camera mein hain',
-  face_turned_away:        'Muh camera se fera hua hai',
-  eyes_not_on_screen:      'Aankhen screen pe nahi hain',
-  looking_down:            'Neeche dekh rahe ho',
-  slouching:               'Seedha baitho — posture kharab hai',
-  uneven_shoulders:        'Kandhe ek taraf jhuke hain',
-  leaning_sideways:        'Ek taraf jhuke hue ho',
-  hand_near_face:          'Haath muh ke paas hai',
-  excessive_hand_gesture:  'Haath zyada hilaa rahe ho',
-  arms_out_of_frame:       'Haath frame se bahar ja rahe hain',
-  too_far_from_camera:     'Camera se bahut door ho',
-  too_close_to_camera:     'Camera ke bahut paas ho',
-  tab_switched:            'Tab switch kiya!',
-  background_voice:        'Background mein awaaz aa rahi hai',
-  multiple_voices:         'Ek se zyada awaazein sun rahi hain',
-  camera_off:              'Camera band ho gaya',
-  frame_decode_error:      'Camera frame read nahi ho raha',
+  no_person_detected: 'Camera mein koi nahi dikh raha',
+  multiple_people: '2 ya zyada log camera mein hain',
+  face_turned_away: 'Muh camera se fera hua hai',
+  eyes_not_on_screen: 'Aankhen screen pe nahi hain',
+  looking_down: 'Neeche dekh rahe ho',
+  slouching: 'Seedha baitho — posture kharab hai',
+  uneven_shoulders: 'Kandhe ek taraf jhuke hain',
+  leaning_sideways: 'Ek taraf jhuke hue ho',
+  hand_near_face: 'Haath muh ke paas hai',
+  excessive_hand_gesture: 'Haath zyada hilaa rahe ho',
+  arms_out_of_frame: 'Haath frame se bahar ja rahe hain',
+  too_far_from_camera: 'Camera se bahut door ho',
+  too_close_to_camera: 'Camera ke bahut paas ho',
+  tab_switched: 'Tab switch kiya!',
+  background_voice: 'Background mein awaaz aa rahi hai',
+  multiple_voices: 'Ek se zyada awaazein sun rahi hain',
+  camera_off: 'Camera band ho gaya',
+  frame_decode_error: 'Camera frame read nahi ho raha',
 };
 
 export const ANOMALY_SEVERITY = {
-  no_person_detected:     'critical',
-  multiple_people:        'critical',
-  tab_switched:           'critical',
-  camera_off:             'critical',
-  face_turned_away:       'high',
-  eyes_not_on_screen:     'high',
-  hand_near_face:         'high',
-  multiple_voices:        'high',
-  looking_down:           'medium',
-  background_voice:       'medium',
-  slouching:              'low',
-  uneven_shoulders:       'low',
-  leaning_sideways:       'low',
+  no_person_detected: 'critical',
+  multiple_people: 'critical',
+  tab_switched: 'critical',
+  camera_off: 'critical',
+  face_turned_away: 'high',
+  eyes_not_on_screen: 'high',
+  hand_near_face: 'high',
+  multiple_voices: 'high',
+  looking_down: 'medium',
+  background_voice: 'medium',
+  slouching: 'low',
+  uneven_shoulders: 'low',
+  leaning_sideways: 'low',
   excessive_hand_gesture: 'low',
-  arms_out_of_frame:      'low',
-  too_far_from_camera:    'low',
-  too_close_to_camera:    'low',
+  arms_out_of_frame: 'low',
+  too_far_from_camera: 'low',
+  too_close_to_camera: 'low',
 };
 
 export const ANOMALY_TIPS = {
-  no_person_detected:      'Apna chehra camera ke saamne rakho',
-  multiple_people:         'Private room mein baitho, koi aur na dikhay',
-  face_turned_away:        'Camera ki taraf seedha dekho',
-  eyes_not_on_screen:      'Screen pe focus rakho',
-  looking_down:            'Notes upar rakho, neeche mat dekho',
-  slouching:               'Seedhe baitho, kamar seedhi rakho',
-  uneven_shoulders:        'Dono kandhe barabar level pe rakho',
-  leaning_sideways:        'Frame ke center mein raho',
-  hand_near_face:          'Haath muh se door rakho',
-  excessive_hand_gesture:  'Haath ko shant rakho',
-  arms_out_of_frame:       'Haath frame ke andar rakho',
-  too_far_from_camera:     'Camera ke thoda paas aao',
-  too_close_to_camera:     'Camera se thoda door jao',
-  tab_switched:            'Interview window pe wapas aao!',
-  background_voice:        'Quiet jagah pe baitho',
-  multiple_voices:         'Akele kaho — koi aur bol raha lag raha hai',
-  camera_off:              'Camera on karo',
+  no_person_detected: 'Apna chehra camera ke saamne rakho',
+  multiple_people: 'Private room mein baitho, koi aur na dikhay',
+  face_turned_away: 'Camera ki taraf seedha dekho',
+  eyes_not_on_screen: 'Screen pe focus rakho',
+  looking_down: 'Notes upar rakho, neeche mat dekho',
+  slouching: 'Seedhe baitho, kamar seedhi rakho',
+  uneven_shoulders: 'Dono kandhe barabar level pe rakho',
+  leaning_sideways: 'Frame ke center mein raho',
+  hand_near_face: 'Haath muh se door rakho',
+  excessive_hand_gesture: 'Haath ko shant rakho',
+  arms_out_of_frame: 'Haath frame ke andar rakho',
+  too_far_from_camera: 'Camera ke thoda paas aao',
+  too_close_to_camera: 'Camera se thoda door jao',
+  tab_switched: 'Interview window pe wapas aao!',
+  background_voice: 'Quiet jagah pe baitho',
+  multiple_voices: 'Akele kaho — koi aur bol raha lag raha hai',
+  camera_off: 'Camera on karo',
 };
 
 // ─────────────────────────────────────────────────
@@ -83,8 +83,8 @@ export const ANOMALY_TIPS = {
 // zyada continuously bani rahe toh ek "warning" count hoti
 // hai. MAX_WARNINGS pe interview terminate ho jaata hai.
 // ─────────────────────────────────────────────────
-export const SUSTAINED_MS  = 3000;
-export const MAX_WARNINGS  = 5;
+export const SUSTAINED_MS = 3000;
+export const MAX_WARNINGS = 5;
 
 function getRating(score) {
   if (score >= 90) return 'Excellent';
@@ -99,37 +99,37 @@ function getRating(score) {
 // ─────────────────────────────────────────────────
 export const useAnomalyDetector = ({
   videoRef,
-  isActive   = false,
+  isActive = false,
   intervalMs = 3000,
 }) => {
   // Hidden canvas for frame capture
-  const canvasRef        = useRef(null);
-  const poseTimerRef     = useRef(null);
-  const audioCtxRef      = useRef(null);
-  const analyserRef      = useRef(null);
-  const micStreamRef     = useRef(null);
-  const voiceTimerRef    = useRef(null);
-  const tabCountRef      = useRef(0);
-  const frameCountRef    = useRef(0);
-  const voiceAnomsRef    = useRef([]);    // latest voice anomalies (for merge)
+  const canvasRef = useRef(null);
+  const poseTimerRef = useRef(null);
+  const audioCtxRef = useRef(null);
+  const analyserRef = useRef(null);
+  const micStreamRef = useRef(null);
+  const voiceTimerRef = useRef(null);
+  const tabCountRef = useRef(0);
+  const frameCountRef = useRef(0);
+  const voiceAnomsRef = useRef([]);    // latest voice anomalies (for merge)
 
   const [currentAnomalies, setCurrentAnomalies] = useState([]);
-  const [currentScore,     setCurrentScore]     = useState(100);
-  const [sessionLog,       setSessionLog]       = useState([]);
-  const [tabSwitchCount,   setTabSwitchCount]   = useState(0);
-  const [isCameraOn,       setIsCameraOn]       = useState(true);
-  const [isServiceOnline,  setIsServiceOnline]  = useState(true);
+  const [currentScore, setCurrentScore] = useState(100);
+  const [sessionLog, setSessionLog] = useState([]);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isServiceOnline, setIsServiceOnline] = useState(true);
 
   // Sustained-warning tracking (3-sec continuous anomaly = 1 warning)
-  const anomalyStartRef   = useRef({});   // { [type]: firstSeenAtMs }
+  const anomalyStartRef = useRef({});   // { [type]: firstSeenAtMs }
   const anomalyCountedRef = useRef({});   // { [type]: true } once counted for this streak
   const [warningCount, setWarningCount] = useState(0);
-  const [warningLog,   setWarningLog]   = useState([]); // [{ type, timestamp }]
+  const [warningLog, setWarningLog] = useState([]); // [{ type, timestamp }]
 
   // Create hidden canvas once on mount
   useEffect(() => {
     const c = document.createElement('canvas');
-    c.width  = 320;
+    c.width = 320;
     c.height = 240;
     c.style.display = 'none';
     document.body.appendChild(c);
@@ -174,16 +174,16 @@ export const useAnomalyDetector = ({
   // ──────────────────────────────────────────────
   const startVoiceMonitor = useCallback(async () => {
     try {
-      const stream  = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       micStreamRef.current = stream;
 
-      const ctx      = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
       ctx.createMediaStreamSource(stream).connect(analyser);
 
-      audioCtxRef.current  = ctx;
-      analyserRef.current  = analyser;
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
 
       const buf = new Uint8Array(analyser.frequencyBinCount);
 
@@ -194,7 +194,7 @@ export const useAnomalyDetector = ({
         const avg = buf.reduce((a, b) => a + b, 0) / buf.length;
 
         let va = [];
-        if (avg > 55)      va = ['multiple_voices'];
+        if (avg > 55) va = ['multiple_voices'];
         else if (avg > 22) va = ['background_voice'];
 
         voiceAnomsRef.current = va;
@@ -227,12 +227,13 @@ export const useAnomalyDetector = ({
   // 3. CAMERA STATUS CHECK
   // ──────────────────────────────────────────────
   const checkCamera = useCallback(() => {
-    const video  = videoRef?.current;
+    const video = videoRef?.current;
     if (!video) return;
 
     const tracks = video.srcObject?.getVideoTracks?.() || [];
-    const on     = tracks.length > 0 && tracks[0].readyState === 'live';
+    const on = tracks.length > 0 && tracks[0].readyState === 'live' && tracks[0].enabled;
     setIsCameraOn(on);
+
 
     if (!on) {
       setSessionLog(prev => {
@@ -258,7 +259,7 @@ export const useAnomalyDetector = ({
   const captureAndSend = useCallback(async () => {
     checkCamera();
 
-    const video  = videoRef?.current;
+    const video = videoRef?.current;
     const canvas = canvasRef.current;
     if (!video || !canvas || video.readyState < 2) return;
 
@@ -284,12 +285,12 @@ export const useAnomalyDetector = ({
 
       if (all.length > 0) {
         setSessionLog(prev => [...prev, {
-          timestamp:    Date.now(),
-          anomalies:    all,
-          score:        data.score ?? 100,
-          details:      data.details || {},
+          timestamp: Date.now(),
+          anomalies: all,
+          score: data.score ?? 100,
+          details: data.details || {},
           person_count: data.person_count ?? 1,
-          category:     'pose',
+          category: 'pose',
         }]);
       }
     } catch (err) {
@@ -374,9 +375,9 @@ export const useAnomalyDetector = ({
       .sort((a, b) => b[1] - a[1])
       .map(([type, count]) => ({
         type, count,
-        label:      ANOMALY_LABELS[type] || type,
-        severity:   ANOMALY_SEVERITY[type] || 'medium',
-        tip:        ANOMALY_TIPS[type] || '',
+        label: ANOMALY_LABELS[type] || type,
+        severity: ANOMALY_SEVERITY[type] || 'medium',
+        tip: ANOMALY_TIPS[type] || '',
         percentage: Math.round((count / Math.max(fc, 1)) * 100),
       }));
 
@@ -385,13 +386,13 @@ export const useAnomalyDetector = ({
     );
 
     return {
-      totalFlags:    sessionLog.length,
-      averageScore:  avgScore,
+      totalFlags: sessionLog.length,
+      averageScore: avgScore,
       topIssues,
-      flagRate:      `${Math.round((sessionLog.length / Math.max(fc, 1)) * 100)}%`,
+      flagRate: `${Math.round((sessionLog.length / Math.max(fc, 1)) * 100)}%`,
       overallRating: getRating(avgScore),
-      tabSwitches:   tabCountRef.current,
-      rawLog:        sessionLog,
+      tabSwitches: tabCountRef.current,
+      rawLog: sessionLog,
     };
   }, [sessionLog]);
 
@@ -402,10 +403,10 @@ export const useAnomalyDetector = ({
     setTabSwitchCount(0);
     setWarningCount(0);
     setWarningLog([]);
-    tabCountRef.current       = 0;
-    frameCountRef.current     = 0;
-    voiceAnomsRef.current     = [];
-    anomalyStartRef.current   = {};
+    tabCountRef.current = 0;
+    frameCountRef.current = 0;
+    voiceAnomsRef.current = [];
+    anomalyStartRef.current = {};
     anomalyCountedRef.current = {};
   }, []);
 

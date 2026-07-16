@@ -1,0 +1,17 @@
+/Users/krishnakumar/Desktop/InterviewAI/server/node_modules/mongoose/lib/drivers/node-mongodb-native/connection.js:237
+    throw new MongooseError('The `uri` parameter to `openUri()` must be a ' +
+          ^
+
+MongooseError: The `uri` parameter to `openUri()` must be a string, got "undefined". Make sure the first parameter to `mongoose.connect()` or `mongoose.createConnection()` is a string.
+    at NativeConnection.createClient (/Users/krishnakumar/Desktop/InterviewAI/server/node_modules/mongoose/lib/drivers/node-mongodb-native/connection.js:237:11)
+    at NativeConnection.openUri (/Users/krishnakumar/Desktop/InterviewAI/server/node_modules/mongoose/lib/connection.js:1075:34)
+    at Mongoose.connect (/Users/krishnakumar/Desktop/InterviewAI/server/node_modules/mongoose/lib/mongoose.js:450:15)
+    at /Users/krishnakumar/Desktop/InterviewAI/server/scripts/generateDSADescriptions.js:96:18
+    at Object.<anonymous> (/Users/krishnakumar/Desktop/InterviewAI/server/scripts/generateDSADescriptions.js:121:3)
+    at Module._compile (node:internal/modules/cjs/loader:1873:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:2013:10)
+    at Module.load (node:internal/modules/cjs/loader:1596:32)
+    at Module._load (node:internal/modules/cjs/loader:1398:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19)
+
+Node.js v26.3.0

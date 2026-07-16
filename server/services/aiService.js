@@ -96,8 +96,8 @@ async function ollamaGenerate(prompt, systemPrompt = '') {
         prompt: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
         stream: false, // Poora response ek saath chahiye, streaming nahi
         options: {
-          temperature: 0.7,   // Thoda creative, lekin zyada random nahi
-          num_predict: 2000,  // Max tokens jawab mein
+          temperature: 0.3,   // Thoda creative, lekin zyada random nahi
+          num_predict: 4000,  // Max tokens jawab mein
         },
       },
       { timeout: 120000 } // Ollama local model hai, thoda slow ho sakta hai — 2 min timeout
@@ -112,6 +112,32 @@ async function ollamaGenerate(prompt, systemPrompt = '') {
 // MongoDB ke 'questions' collection ka reference (web-scraped interview questions)
 function getQuestionsCollection() {
   return mongoose.connection.db.collection('questions');
+}
+
+// ─────────────────────────────────────────────────
+// JUNK ANSWER DETECTOR — "hello", "test", "idk" jaise
+// meaningless answers ko pakadta hai, chahe AI khud
+// unko score de de, hum yahan forcibly 0 kar dete hain.
+// ─────────────────────────────────────────────────
+const JUNK_ANSWERS = new Set([
+  'hi', 'hello', 'hey', 'test', 'testing', 'idk', "i don't know",
+  'na', 'n/a', 'none', 'nothing', 'ok', 'okay', 'yes', 'no',
+  'asdf', 'abc', 'xyz', 'blah', 'fine', 'good', 'nice', 'yo',
+  'sup', 'lol', 'nah', 'yeah', 'meh',
+]);
+
+function isJunkAnswer(text) {
+  if (!text) return true;
+  const trimmed = text.trim().toLowerCase();
+  if (!trimmed || trimmed === 'no answer provided.') return true;
+
+  const cleaned = trimmed.replace(/[^\w\s]/g, ''); // punctuation hatao
+  if (JUNK_ANSWERS.has(cleaned)) return true;
+
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length < 4) return true; // 4 se kam words = technical answer nahi ho sakta
+
+  return false;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -233,38 +259,90 @@ const analyzeInterview = async (role, level, questions, answers) => {
 Analyze interview answers and provide detailed, honest feedback.
 Always respond with valid JSON only — no markdown, no explanation outside JSON.`;
 
-    const prompt = `Evaluate this ${level}-level ${role} interview:
+    const prompt = `Evaluate this ${level}-level ${role} interview.
+You are a RUTHLESS, zero-tolerance technical evaluator for a serious hiring
+pipeline. Assume every candidate is actively trying to cheat, bluff, or game
+this scoring system with vague, generic, copy-pasted, or off-topic answers.
+Your default assumption for any answer is that it deserves a LOW score
+unless it proves otherwise with real, specific, verifiable technical
+substance. When in doubt, score LOWER, not higher. Do not be polite,
+generous, or encouraging in your scoring — only in your written feedback
+text.
 
 ${qaText}
 
-IMPORTANT SCORING RULE: If an answer is "No answer provided." or empty/blank,
-that question's score in feedbackDetails MUST be 0, with weaknesses noting no
-response was given. Do not award any partial credit for unanswered questions.
-If ALL answers are empty, every score (technicalScore, communicationScore,
-confidenceScore, grammarScore, problemSolvingScore, averageScore) MUST be 0.
+STRICT SCORING RULES (follow exactly, no exceptions):
 
-Return this exact JSON structure (no markdown):
-{
-  "technicalScore": <0-100>,
-  "communicationScore": <0-100>,
-  "confidenceScore": <0-100>,
-  "grammarScore": <0-100>,
-  "problemSolvingScore": <0-100>,
-  "averageScore": <0-100>,
-  "strengths": "<overall strengths in 2-3 sentences>",
-  "weaknesses": "<areas to improve in 2-3 sentences>",
-  "suggestions": "<specific actionable advice>",
-  "feedbackDetails": [
+1. EMPTY / NO ANSWER: If an answer is "No answer provided." or blank,
+   score = 0. Non-negotiable.
+
+2. JUNK / GREETING / GIBBERISH: If an answer is a greeting, filler word,
+   single word, keyboard mash, or generic non-answer ("hello", "hi",
+   "test", "idk", "ok", "yes", "fine", "asdf", emojis only, etc.),
+   score = 0. Do not award points just because characters were typed.
+
+3. OFF-TOPIC CONTENT: If the answer's actual subject matter does not
+   directly address what the specific question asked — even if it is
+   long, fluent, confident, grammatically perfect, or technical-SOUNDING —
+   score = 0-5. A well-written answer about the wrong topic is worth
+   NOTHING. Do not reward eloquence, length, or apparent effort over
+   actual relevance. Read the question and the answer literally: does the
+   answer's content actually engage with THIS question's subject? If not,
+   it fails.
+
+4. VAGUE / GENERIC ANSWERS: If the answer could apply to almost any
+   question in this domain without being specific to what was actually
+   asked (buzzwords, textbook definitions with no depth, hand-waving),
+   cap the score at 15-25. Generic filler is not technical competence.
+
+5. PARTIAL / SHALLOW ANSWERS: Only award 40-60 if the answer shows SOME
+   correct, specific understanding but is incomplete, has gaps, or lacks
+   depth/examples.
+
+6. STRONG ANSWERS: Only award 65-85 if the answer is specific, technically
+   accurate, directly addresses the question, and shows real understanding.
+
+7. EXCEPTIONAL ANSWERS: Reserve 86-100 ONLY for answers that are precise,
+   complete, technically rigorous, use correct terminology, and would
+   genuinely impress a senior interviewer at a top company. This band
+   should be rare — most real candidates do NOT reach it.
+
+8. NO CHARITY: Never give credit for effort, confidence, politeness,
+   answer length, or "sounding smart." Score ONLY the actual technical
+   correctness and relevance of the content. Do not assume or infer
+   knowledge the candidate did not explicitly demonstrate in writing.
+
+9. ALL-JUNK SESSION: If every single answer in this interview is
+   empty/junk/off-topic, every score (technicalScore, communicationScore,
+   confidenceScore, grammarScore, problemSolvingScore, averageScore)
+   MUST be 0.
+
+10. BE CONSISTENT: Apply these rules identically and mechanically to every
+    question — do not soften scoring for later questions or because
+    earlier answers were good.
+
+Return this exact JSON structure(no markdown):
     {
-      "questionText": "<question>",
-      "answerText": "<answer>",
-      "score": <0-100>,
-      "strengths": "<what was good>",
-      "weaknesses": "<what was missing>",
-      "suggestions": "<how to improve>"
-    }
-  ]
-}`;
+      "technicalScore": < 0 - 100 >,
+        "communicationScore": < 0 - 100 >,
+          "confidenceScore": < 0 - 100 >,
+            "grammarScore": < 0 - 100 >,
+              "problemSolvingScore": < 0 - 100 >,
+                "averageScore": < 0 - 100 >,
+                  "strengths": "<overall strengths in 2-3 sentences>",
+                    "weaknesses": "<areas to improve in 2-3 sentences>",
+                      "suggestions": "<specific actionable advice>",
+                        "feedbackDetails": [
+                          {
+                            "questionText": "<question>",
+                            "answerText": "<answer>",
+                            "score": < 0 - 100 >,
+                            "strengths": "<what was good>",
+                            "weaknesses": "<what was missing>",
+                            "suggestions": "<how to improve>"
+                          }
+                        ]
+    } `;
 
     const response = await ollamaGenerate(prompt, systemPrompt);
 
@@ -290,6 +368,7 @@ Return this exact JSON structure (no markdown):
                 parsed[field] = avg;
               }
             });
+
             if (!Array.isArray(parsed.feedbackDetails)) {
               parsed.feedbackDetails = [];
             }
@@ -297,11 +376,48 @@ Return this exact JSON structure (no markdown):
             if (typeof parsed.weaknesses !== 'string') parsed.weaknesses = 'N/A';
             if (typeof parsed.suggestions !== 'string') parsed.suggestions = 'N/A';
 
+            // SAFETY NET: Ollama kabhi-kabhi junk answers ("hello", "test")
+            // ko bhi generous score de deta hai. Yahan forcibly override
+            // karte hain agar actual answer text junk nikle.
+            parsed.feedbackDetails = parsed.feedbackDetails.map((detail, idx) => {
+              const ansObj = answers.find(a => a.questionIndex === idx);
+              const actualAnswerText = ansObj ? ansObj.answerText : '';
+              if (isJunkAnswer(actualAnswerText)) {
+                return {
+                  ...detail,
+                  score: 0,
+                  strengths: 'N/A',
+                  weaknesses: 'No meaningful answer was provided.',
+                  suggestions: 'Attempt the question with a real, relevant technical answer to get scored.',
+                };
+              }
+              return detail;
+            });
+
+            // Agar koi override hua, to overall scores bhi recompute karo
+            const anyJunk = parsed.feedbackDetails.some((d, idx) => {
+              const ansObj = answers.find(a => a.questionIndex === idx);
+              return isJunkAnswer(ansObj ? ansObj.answerText : '');
+            });
+            if (anyJunk && parsed.feedbackDetails.length > 0) {
+              const recalculatedAvg = Math.round(
+                parsed.feedbackDetails.reduce((s, d) => s + (d.score || 0), 0) / parsed.feedbackDetails.length
+              );
+              parsed.averageScore = recalculatedAvg;
+              parsed.technicalScore = recalculatedAvg;
+              parsed.communicationScore = recalculatedAvg;
+              parsed.confidenceScore = recalculatedAvg;
+              parsed.grammarScore = recalculatedAvg;
+              parsed.problemSolvingScore = recalculatedAvg;
+            }
+
             return parsed;
+
           }
         }
       } catch (e) {
-        console.log('[Ollama] Feedback parse error, fallback use karo');
+        console.log('[Ollama] Feedback parse error, fallback use karo. Error:', e.message);
+        console.log('[Ollama] Raw response was:', response?.slice(0, 1000));
       }
     }
 
@@ -405,7 +521,7 @@ function generateFallbackFeedback(questions, answers) {
   const feedbackDetails = questions.map((q, idx) => {
     const ansObj = answers.find(a => a.questionIndex === idx);
     const text = ansObj ? ansObj.answerText.trim() : '';
-    const isNoAnswer = !text || text.toLowerCase() === 'no answer provided.';
+    const isNoAnswer = isJunkAnswer(text);
     let score = 0;
     let strengths = 'N/A';
     let weaknesses = 'No response provided.';

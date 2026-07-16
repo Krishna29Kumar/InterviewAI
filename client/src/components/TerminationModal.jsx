@@ -5,11 +5,12 @@
  * Interview terminate ho jaata hai aur 0 score milta hai
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertOctagon, XCircle } from 'lucide-react';
 
 export default function TerminationModal({ violation, onConfirm }) {
+    const [secondsLeft, setSecondsLeft] = useState(5);
     // Auto confirm after 5 seconds
     useEffect(() => {
         if (!violation) return;
@@ -17,7 +18,27 @@ export default function TerminationModal({ violation, onConfirm }) {
         return () => clearTimeout(t);
     }, [violation, onConfirm]);
 
+    useEffect(() => {
+        if (!violation) return;
+        setSecondsLeft(5);
+        const interval = setInterval(() => {
+            setSecondsLeft((s) => (s > 0 ? s - 1 : 0));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [violation]);
+
+
+
     if (!violation) return null;
+
+    const violationMessages = {
+        keyboard_paste: 'Copy-paste detected on a DSA/Coding question.',
+        right_click: 'Right-click detected on a DSA/Coding question.',
+        tab_switch: 'Tab switch detected during the interview.',
+        fullscreen_exit: 'You exited fullscreen mode and did not return within the time limit.',
+        camera_off: 'Camera was turned off during the interview.',
+    };
+    const violationMessage = violationMessages[violation.type] || 'Copy-Paste attempt detected on a DSA/Coding question.';
 
     return (
         <motion.div
@@ -86,7 +107,15 @@ export default function TerminationModal({ violation, onConfirm }) {
                 }}>
                     {violation.type === 'proctoring_warnings'
                         ? 'Interview terminated: 5 sustained proctoring warnings (eye tracking / posture / tab / camera) were recorded.'
-                        : 'Copy-paste detected on a DSA/Coding question.'}
+                        : violation.type === 'fullscreen_exit'
+                            ? 'You exited fullscreen mode and did not return within the time limit.'
+                            : violation.type === 'camera_off'
+                                ? 'Camera was turned off during the interview.'
+                                : violation.type === 'tab_switch'
+                                    ? 'Tab switch detected during the interview.'
+                                    : violation.type === 'right_click'
+                                        ? 'Right-click detected on a DSA/Coding question.'
+                                        : 'Copy-paste detected on a DSA/Coding question.'}
                 </p>
                 <p style={{
                     fontSize: '13px',
@@ -115,9 +144,9 @@ export default function TerminationModal({ violation, onConfirm }) {
                             violation.type === 'right_click' ? '🖱️ Right Click on Answer Field' :
                                 violation.type === 'tab_switch' ? '🚨 Tab Switch Detected' :
                                     violation.type === 'fullscreen_exit' ? '🖥️ Fullscreen Mode Exited' :
-                                    violation.type === 'camera_off' ? '📷 Camera Turned Off' :
-                                        violation.type === 'proctoring_warnings' ? '⚠️ 5 Sustained Proctoring Warnings' :
-                                        '📋 Copy-Paste Attempt'}
+                                        violation.type === 'camera_off' ? '📷 Camera Turned Off' :
+                                            violation.type === 'proctoring_warnings' ? '⚠️ 5 Sustained Proctoring Warnings' :
+                                                '📋 Copy-Paste Attempt'}
                     </div>
                     <div style={{ fontSize: '11px', color: '#4b5563', marginTop: '4px' }}>
                         {new Date(violation.timestamp).toLocaleTimeString()}
@@ -159,7 +188,7 @@ export default function TerminationModal({ violation, onConfirm }) {
                 </button>
 
                 <p style={{ fontSize: '11px', color: '#374151', marginTop: '12px' }}>
-                    Auto-redirecting in 5 seconds...
+                    Auto-redirecting in {secondsLeft} second{secondsLeft !== 1 ? 's' : ''}...
                 </p>
             </motion.div>
         </motion.div>

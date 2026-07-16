@@ -18,6 +18,8 @@ import ProfilePage from '../pages/ProfilePage';
 import AnalyticsPage from '../pages/AnalyticsPage';
 import CompanyDSASetup from '../pages/CompanyDSASetup';
 import CompanyDSASession from '../pages/CompanyDSASession';
+import AboutPage from '../pages/AboutPage';
+import ContactPage from '../pages/ContactPage';
 
 import ProtectedRoute from '../components/ProtectedRoute';
 
@@ -34,6 +36,8 @@ const AppRoutes = () => {
       <Route element={<MainLayout />}>
         {/* Public Landing */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
         {/* Protected Dashboard Routes */}
         <Route

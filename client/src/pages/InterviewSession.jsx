@@ -20,7 +20,9 @@ const InterviewSession = () => {
   const { currentInterview, currentIndex, answers, loading } = useSelector((state) => state.interview);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const camOffTimerRef = useRef(null);
   const [camEnabled, setCamEnabled] = useState(false);
+  const [camTrackOn, setCamTrackOn] = useState(true);
   const [violation, setViolation] = useState(null);
   const [camError, setCamError] = useState('');
   const [anomalySummary, setAnomalySummary] = useState(null);
@@ -55,6 +57,15 @@ const InterviewSession = () => {
     if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
     setCamEnabled(false);
   };
+
+  const toggleCameraTrack = () => {
+    if (!streamRef.current) return;
+    const newState = !camTrackOn;
+    streamRef.current.getVideoTracks().forEach(t => t.enabled = newState);
+    setCamTrackOn(newState);
+  };
+
+
   // User ne khud camera-off button dabaya (session ke dauran) — yeh bhi
   // ek violation hai, warna candidate jaan-boojh kar khud camera band
   // karke proctoring se bach sakta tha.
@@ -64,16 +75,25 @@ const InterviewSession = () => {
     }
     stopWebcam();
   };
-  useEffect(() => { if (currentInterview) startWebcam(); return () => stopWebcam(); }, [currentInterview?._id]);
+  useEffect(() => { if (currentInterview) { setCamTrackOn(true); startWebcam(); } return () => stopWebcam(); }, [currentInterview?._id]);
 
-  // Camera off DURING active session — strict: instant terminate + 0 score
-  useEffect(() => {
-    if (currentInterview && camEnabled && !isCameraOn && !violation) {
-      setViolation({ type: 'camera_off', timestamp: new Date().toISOString() });
-      stopWebcam();
-    }
-  }, [isCameraOn, currentInterview, violation, camEnabled]);
   useEffect(() => { if (tabSwitchCount > 0) toast.error('Tab switch detected! (' + tabSwitchCount + 'x)'); }, [tabSwitchCount]);
+
+  useEffect(() => {
+    if (!camEnabled || violation) return;
+
+    if (!isCameraOn) {
+      camOffTimerRef.current = setTimeout(() => {
+        setViolation({ type: 'camera_off', timestamp: new Date().toISOString() });
+        stopWebcam();
+      }, 5000);
+    } else {
+      clearTimeout(camOffTimerRef.current);
+    }
+
+    return () => clearTimeout(camOffTimerRef.current);
+  }, [isCameraOn, camEnabled, violation]);
+
   useEffect(() => {
     if (warningCount > 0 && warningCount < MAX_WARNINGS) {
       toast.error(`Proctoring Warning ${warningCount}/${MAX_WARNINGS}! Sustained anomaly detected.`);
@@ -104,7 +124,7 @@ const InterviewSession = () => {
   const handleCopy = (e) => { e.preventDefault(); toast.error('Copy not allowed!'); };
   const handlePaste = (e) => { e.preventDefault(); toast.error('Paste not allowed!'); };
   const handleCut = (e) => { e.preventDefault(); toast.error('Cut not allowed!'); };
-  const handleKeyDown = (e) => { if ((e.ctrlKey || e.metaKey) && ['c','v','x','a'].includes(e.key.toLowerCase())) { e.preventDefault(); toast.error('Shortcuts disabled!'); } };
+  const handleKeyDown = (e) => { if ((e.ctrlKey || e.metaKey) && ['c', 'v', 'x', 'a'].includes(e.key.toLowerCase())) { e.preventDefault(); toast.error('Shortcuts disabled!'); } };
   const handleSaveAndNext = () => {
     stopRecording(); stopSpeech();
     dispatch(saveAnswer({ questionIndex: currentIndex, answerText: answerText || 'No answer provided.', audioUrl: audioUrl || '' }));
@@ -127,7 +147,7 @@ const InterviewSession = () => {
     if (submitInterview.fulfilled.match(resultAction)) { toast.success('Interview evaluated!'); setShowReport(true); }
     else toast.error(resultAction.payload || 'Evaluation failed.');
   };
-  const formatTime = (s) => `${Math.floor(s/60)}:${(s%60)<10?'0':''}${s%60}`;
+  const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60) < 10 ? '0' : ''}${s % 60}`;
   if (!currentInterview) return null;
   if (showReport && anomalySummary) {
     return (
@@ -148,7 +168,7 @@ const InterviewSession = () => {
     <div className="max-w-7xl mx-auto px-4 lg:px-6 py-6 space-y-6 relative z-10">
       <TerminationModal violation={violation} onConfirm={() => navigate('/dashboard')} />
       <AnomalyOverlay anomalies={currentAnomalies} score={currentScore} isCameraOn={isCameraOn} />
-      
+
       {/* Top Header Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-darkBorder">
         <div>
@@ -162,7 +182,7 @@ const InterviewSession = () => {
           </div>
           <h2 className="text-2xl font-extrabold text-white mt-2 tracking-tight">Secure Assessment Session</h2>
         </div>
-        
+
         {/* System & Clock Info */}
         <div className="flex items-center flex-wrap gap-3">
           <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-darkBorder bg-white/3 text-gray-400 text-xs">
@@ -178,14 +198,14 @@ const InterviewSession = () => {
 
       {/* Main Splitscreen Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* LEFT COLUMN: Camera Feed & Proctoring Info */}
         <div className="lg:col-span-1 space-y-6">
-          
+
           {/* Webcam Box */}
           <div className="glass-panel rounded-2xl border border-darkBorder overflow-hidden bg-black/40 relative shadow-lg" style={{ aspectRatio: '4/3' }}>
             <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover ${camEnabled ? 'block' : 'hidden'}`} />
-            
+
             {!camEnabled && (
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 space-y-3 bg-black/50 backdrop-blur-sm">
                 <CameraOff className="w-10 h-10 text-gray-500" />
@@ -199,7 +219,7 @@ const InterviewSession = () => {
                 </button>
               </div>
             )}
-            
+
             {camEnabled && (
               <>
                 {/* Live Badge */}
@@ -208,9 +228,10 @@ const InterviewSession = () => {
                   <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">Live Feed</span>
                 </div>
                 {/* Toggle Cam */}
-                <button onClick={handleManualCameraOff} className="absolute top-3 right-3 p-2 rounded-full bg-black/75 text-gray-400 hover:text-rose-400 border border-white/10 hover:border-rose-500/20 transition duration-200">
+                <button onClick={toggleCameraTrack} className={`absolute top-3 right-3 p-2 rounded-full bg-black/75 border border-white/10 transition duration-200 ${camTrackOn ? 'text-gray-400 hover:text-rose-400 hover:border-rose-500/20' : 'text-rose-400 border-rose-500/40'}`}>
                   <CameraOff className="w-3.5 h-3.5" />
                 </button>
+
               </>
             )}
           </div>
@@ -221,7 +242,7 @@ const InterviewSession = () => {
               <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Verification Console</span>
               <Shield className="w-4 h-4 text-neonBlue" />
             </div>
-            
+
             <div className="space-y-3.5">
               {/* Score Metric */}
               <div className="flex items-center justify-between text-sm">
@@ -230,7 +251,7 @@ const InterviewSession = () => {
                   {currentScore}/100
                 </span>
               </div>
-              
+
               {/* Integrity Progress Bar */}
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div className="h-full transition-all duration-500" style={{ width: `${currentScore}%`, backgroundColor: scoreColor }} />
@@ -284,7 +305,7 @@ const InterviewSession = () => {
 
         {/* RIGHT COLUMN: Question & Workspace */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Question Box */}
           <div className="glass-panel rounded-2xl border border-darkBorder p-6 space-y-5">
             <div className="flex justify-between items-center border-b border-darkBorder pb-3">
@@ -295,7 +316,7 @@ const InterviewSession = () => {
                 <div className="h-full bg-neon-gradient transition-all duration-300" style={{ width: `${((currentIndex + 1) / totalQuestions) * 100}%` }} />
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <p className="text-xl text-white font-semibold leading-relaxed tracking-tight">
                 {currentQuestionText}
@@ -304,8 +325,8 @@ const InterviewSession = () => {
 
             {/* Read Aloud Section */}
             <div className="pt-2 flex items-center space-x-3">
-              <button 
-                onClick={() => isSpeaking ? stopSpeech() : speak(currentQuestionText)} 
+              <button
+                onClick={() => isSpeaking ? stopSpeech() : speak(currentQuestionText)}
                 className={`flex items-center space-x-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all duration-200 ${isSpeaking ? 'bg-neonPurple/20 border-neonPurple/50 text-neonPurple shadow-neon-purple/20' : 'bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10'}`}
               >
                 {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
@@ -342,23 +363,23 @@ const InterviewSession = () => {
               </div>
 
               {/* Response textarea */}
-              <textarea 
-                value={answerText} 
-                onChange={(e) => setAnswerText(e.target.value)} 
-                onCopy={handleCopy} 
-                onPaste={handlePaste} 
-                onCut={handleCut} 
-                onKeyDown={handleKeyDown} 
-                onContextMenu={(e) => e.preventDefault()} 
-                placeholder="Compose your response here. Provide detailed explanations, code snippets, or architecture details where applicable..." 
-                className="w-full min-h-[220px] p-4 rounded-xl text-sm font-mono text-gray-200 glass-input resize-none focus:ring-1 focus:ring-neonBlue/30" 
+              <textarea
+                value={answerText}
+                onChange={(e) => setAnswerText(e.target.value)}
+                onCopy={handleCopy}
+                onPaste={handlePaste}
+                onCut={handleCut}
+                onKeyDown={handleKeyDown}
+                onContextMenu={(e) => e.preventDefault()}
+                placeholder="Compose your response here. Provide detailed explanations, code snippets, or architecture details where applicable..."
+                className="w-full min-h-[220px] p-4 rounded-xl text-sm font-mono text-gray-200 glass-input resize-none focus:ring-1 focus:ring-neonBlue/30"
               />
 
               {/* Audio/Voice Recording Controls */}
               <div className="flex items-center justify-between flex-wrap gap-4 pt-2 border-t border-darkBorder/40">
-                <button 
-                  onClick={() => isRecording ? stopRecording() : startRecording()} 
-                  disabled={isTranscribing} 
+                <button
+                  onClick={() => isRecording ? stopRecording() : startRecording()}
+                  disabled={isTranscribing}
                   className={`px-5 py-3 rounded-xl font-bold text-xs flex items-center space-x-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] ${isRecording ? 'bg-rose-600 text-white animate-pulse shadow-lg shadow-rose-600/20' : 'bg-neonBlue/15 border border-neonBlue/30 text-neonBlue hover:bg-neonBlue/25'}`}
                 >
                   {isRecording ? (
@@ -393,9 +414,9 @@ const InterviewSession = () => {
 
           {/* Navigation Action Buttons */}
           <div className="flex justify-between items-center pt-2">
-            <button 
-              onClick={handleSaveAndPrev} 
-              disabled={currentIndex === 0} 
+            <button
+              onClick={handleSaveAndPrev}
+              disabled={currentIndex === 0}
               className="flex items-center space-x-2 px-5 py-3 rounded-xl border border-darkBorder bg-white/3 text-gray-300 hover:text-white text-xs font-bold disabled:opacity-20 disabled:pointer-events-none hover:bg-white/5 transition-all duration-200"
             >
               <ChevronLeft className="w-4 h-4" />
@@ -403,9 +424,9 @@ const InterviewSession = () => {
             </button>
 
             {currentIndex === totalQuestions - 1 ? (
-              <button 
-                onClick={handleFinalSubmit} 
-                disabled={loading} 
+              <button
+                onClick={handleFinalSubmit}
+                disabled={loading}
                 className="flex items-center space-x-2 px-7 py-3.5 rounded-xl bg-neon-gradient text-white font-extrabold text-xs shadow-neon-blue hover:scale-[1.03] active:scale-[0.97] disabled:opacity-50 transition-all duration-200"
               >
                 {loading ? (
@@ -421,8 +442,8 @@ const InterviewSession = () => {
                 )}
               </button>
             ) : (
-              <button 
-                onClick={handleSaveAndNext} 
+              <button
+                onClick={handleSaveAndNext}
                 className="flex items-center space-x-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-neonBlue/40 text-white text-xs font-bold transition-all duration-200 hover:scale-[1.02]"
               >
                 <span>Save & Next Question</span>

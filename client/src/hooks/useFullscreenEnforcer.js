@@ -14,6 +14,11 @@ export function useFullscreenEnforcer({ isActive, onExitTooLong, graceMs = 5000 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
   const exitTimerRef = useRef(null);
+  const onExitTooLongRef = useRef(onExitTooLong);
+
+  useEffect(() => {
+    onExitTooLongRef.current = onExitTooLong;
+  }, [onExitTooLong]);
 
   const enterFullscreen = useCallback(async () => {
     try {
@@ -36,7 +41,7 @@ export function useFullscreenEnforcer({ isActive, onExitTooLong, graceMs = 5000 
 
       if (!fsNow) {
         setShowWarning(true);
-        exitTimerRef.current = setTimeout(() => onExitTooLong?.(), graceMs);
+        exitTimerRef.current = setTimeout(() => onExitTooLongRef.current?.(), graceMs);  // 👈 CHANGED
       } else {
         setShowWarning(false);
         clearTimeout(exitTimerRef.current);
@@ -48,7 +53,7 @@ export function useFullscreenEnforcer({ isActive, onExitTooLong, graceMs = 5000 
       document.removeEventListener('fullscreenchange', handleChange);
       clearTimeout(exitTimerRef.current);
     };
-  }, [isActive, onExitTooLong, graceMs]);
+  }, [isActive, graceMs]);   // 👈 onExitTooLong yahan se HATA DIYA
 
   return { isFullscreen, showWarning, enterFullscreen };
 }

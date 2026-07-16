@@ -56,7 +56,7 @@ const CompanyDSASession = () => {
   // warna user ko manually Esc dabaana padta tha, lagta tha kuch atka hai
   useEffect(() => {
     if (violation && document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
     }
   }, [violation]);
 
@@ -255,7 +255,7 @@ const CompanyDSASession = () => {
       <AnomalyOverlay anomalies={currentAnomalies} score={currentScore} isCameraOn={isCameraOn} />
 
       {showWarning && !violation && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-rose-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg animate-pulse">
+        <div className="fixed top-16 left-0 right-0 z-[99999] bg-rose-600 border-b-4 border-rose-400 text-white px-6 py-4 font-extrabold text-sm shadow-2xl flex items-center justify-center gap-2 animate-pulse">
           ⚠️ Fullscreen se bahar ho! 5 second mein wapas na aaye toh session terminate ho jayega.
         </div>
       )}
