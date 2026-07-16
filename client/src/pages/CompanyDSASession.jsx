@@ -49,7 +49,7 @@ const CompanyDSASession = () => {
   useCopyPasteDetector({
     currentQuestion: currentProblem?.title || '',
     isActive: sessionStarted && !violation,
-    onViolation: (v) => { setViolation(v); stopWebcam(); },
+    onViolation: (v) => { setViolation(v); stopWebcam(); exitFullscreenIfActive(); },
   });
 
   // Violation ho jaaye toh browser ko fullscreen se bhi nikal do —
@@ -66,6 +66,7 @@ const CompanyDSASession = () => {
     onExitTooLong: () => {
       setViolation({ type: 'fullscreen_exit', timestamp: new Date().toISOString() });
       stopWebcam();
+      exitFullscreenIfActive();
     },
   });
 
@@ -74,6 +75,7 @@ const CompanyDSASession = () => {
     if (sessionStarted && tabSwitchCount > 0 && !violation) {
       setViolation({ type: 'tab_switch', timestamp: new Date().toISOString() });
       stopWebcam();
+      exitFullscreenIfActive();
     }
   }, [tabSwitchCount, sessionStarted, violation]);
 
@@ -83,6 +85,7 @@ const CompanyDSASession = () => {
   useEffect(() => {
     if (sessionStarted && camEnabled && !isCameraOn && !violation) {
       setViolation({ type: 'camera_off', timestamp: new Date().toISOString() });
+      exitFullscreenIfActive();
     }
   }, [isCameraOn, sessionStarted, violation, camEnabled]);
 
@@ -103,6 +106,12 @@ const CompanyDSASession = () => {
     if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
     setCamEnabled(false);
   };
+  const exitFullscreenIfActive = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => { });
+    }
+  };
+
 
   // Camera pehle maangte hain, phir fullscreen (kuch browsers permission
   // popup ke waqt fullscreen se apne aap bahar nikal jaate hain)
@@ -124,6 +133,13 @@ const CompanyDSASession = () => {
   }, [sessionStarted]);
 
   useEffect(() => { if (!problems.length) navigate('/dsa-practice/setup'); }, [problems, navigate]);
+
+  useEffect(() => {
+    return () => {
+      stopWebcam();
+      exitFullscreenIfActive();
+    };
+  }, []);
 
   useEffect(() => {
     const existing = answers.find((a) => a.problemId === currentProblem?._id);
@@ -179,6 +195,7 @@ const CompanyDSASession = () => {
     setCompletionScore(score);
 
     stopWebcam();
+    exitFullscreenIfActive();
     const summary = getSessionSummary();
     setAnomalySummary(summary);
     setShowReport(true);
